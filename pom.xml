@@ -22,6 +22,7 @@
           <directory>src/main/resources</directory>
           <includes>
               <include>**/*.fxml</include>
+              <include>**/*.css</include>
               <include>**/*.xml</include>
               <include>**/*.txt</include>
           </includes>             
@@ -46,7 +47,7 @@
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
-              <mainClass>edu.fx_01.LineManipulator</mainClass>
+              <mainClass>edu.fx_01.ObjectsManipulation</mainClass>
             </manifest>
           </archive>
         </configuration>

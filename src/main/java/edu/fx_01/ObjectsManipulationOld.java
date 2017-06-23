@@ -18,7 +18,7 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import javafx.util.converter.DoubleStringConverter;
 
-public class ObjectsManipulation extends Application {
+public class ObjectsManipulationOld extends Application {
   public final int WindowX = 600;
   public final int WindowY = 600;
   public Pixel[][] pool = null;
@@ -76,13 +76,17 @@ public class ObjectsManipulation extends Application {
 	 Anchor anc_02;
 	 Anchor anc_03;
 	 
-	 SimpleDoubleProperty delta0;
-	 SimpleDoubleProperty delta1;
-	 SimpleDoubleProperty delta2;
-	 
+	 SimpleDoubleProperty delta10;
 	 SimpleDoubleProperty delta1A;
 	 SimpleDoubleProperty delta1B;
-	 SimpleDoubleProperty delta1C;
+	 
+	 SimpleDoubleProperty delta20;
+	 SimpleDoubleProperty delta2A;
+	 SimpleDoubleProperty delta2B;
+	 
+	 SimpleDoubleProperty bufferA;
+	 SimpleDoubleProperty bufferB;
+	 SimpleDoubleProperty bufferC;
 	 
 	 DoubleProperty startX;
 	 DoubleProperty startY;
@@ -92,55 +96,39 @@ public class ObjectsManipulation extends Application {
 	 
 	 NumberBinding sum2X;
 	 NumberBinding sum2Y;
-
-	 NumberBinding sum3X;
-	 NumberBinding sum3Y;
 	 
 	 public BlockIha(int startX, int startY){
 		 this.startX =  new SimpleDoubleProperty(startX);
 		 this.startY =  new SimpleDoubleProperty(startY);
 		 
-		 delta0 = new SimpleDoubleProperty(0);
-		 delta1 = new SimpleDoubleProperty(0);
-		 delta2 = new SimpleDoubleProperty(0);
-		 
-		 delta1A = new SimpleDoubleProperty(-20);
-		 delta1B = new SimpleDoubleProperty(20);		 
-		 delta1C = new SimpleDoubleProperty(40);
-		 
-		 ArrayList<Anchor> groupList = new ArrayList<Anchor>();
+		 delta10 = new SimpleDoubleProperty(0);
+		 delta1A = new SimpleDoubleProperty(30);
+		 delta1B = new SimpleDoubleProperty(60);		 
+
+		 delta20 = new SimpleDoubleProperty(0);
+		 delta2A = new SimpleDoubleProperty(30);
+		 delta2B = new SimpleDoubleProperty(60);		 
 		 
 		 this.main = new Block(startX, startY);
-		 this.anc_01 = new Anchor(Color.GRAY, new SimpleDoubleProperty(startX),new SimpleDoubleProperty(startY + 1), false, true);
-		 this.anc_02 = new Anchor(Color.GRAY, new SimpleDoubleProperty(startX),new SimpleDoubleProperty(startY + 2), true);
-		 this.anc_03 = new Anchor(Color.GRAY, new SimpleDoubleProperty(startX),new SimpleDoubleProperty(startY + 3), true);
+		 this.anc_01 = new Anchor(Color.RED, new SimpleDoubleProperty(this.startX.get()),new SimpleDoubleProperty(this.startY.get() + 0));
+		 this.anc_02 = new Anchor(Color.BLACK, new SimpleDoubleProperty(this.startX.get()),new SimpleDoubleProperty(this.startY.get() + 1));
+		 //this.anc_03 = new Anchor(Color.BLACK, new SimpleDoubleProperty(this.startX.get() - 15),new SimpleDoubleProperty(this.startY.get() + 7));
 		 
 		 this.main.toBack();
 		 
-		 sum1X = Bindings.add(this.delta0, this.anc_01.centerXProperty());
+		 sum1X = Bindings.add(this.delta10, this.anc_01.centerXProperty());
 		 sum1Y = Bindings.add(this.delta1A, this.anc_01.centerYProperty());
 		 
 		 this.main.layoutXProperty().bind(sum1X);
 		 this.main.layoutYProperty().bind(sum1Y);
+
+		 sum2X = Bindings.add(this.delta20, this.anc_02.centerXProperty());
+		 sum2Y = Bindings.add(this.delta2B, this.anc_02.centerYProperty());
+
+		 this.anc_02.layoutXProperty().bind(sum1X);
+		 this.anc_02.layoutYProperty().bind(sum1Y);
 		 
-		 sum2X = Bindings.add(this.delta1, this.anc_01.centerXProperty());
-		 sum2Y = Bindings.add(this.delta1B, this.anc_01.centerYProperty());
-
-		 this.anc_02.centerXProperty().bind(sum2X);
-		 this.anc_02.centerYProperty().bind(sum2Y);
-
-		 sum3X = Bindings.add(this.delta2, this.anc_01.centerXProperty());
-		 sum3Y = Bindings.add(this.delta1C, this.anc_01.centerYProperty());
-
-		 this.anc_03.centerXProperty().bind(sum3X);
-		 this.anc_03.centerYProperty().bind(sum3Y);
-
-		 groupList.add(this.anc_02);
-		 groupList.add(this.anc_03);
-		 
-		 this.anc_01.setGroup(groupList);
-		 
-		 getChildren().addAll(main, anc_01, anc_02, anc_03);	 
+		 getChildren().addAll(main, anc_01, anc_02);	 
 	 }
 	 
   }
@@ -223,9 +211,6 @@ public class ObjectsManipulation extends Application {
     private ArrayList<Anchor> oldLink = null;
     private Anchor self = this;
     private boolean notDraggeble = false;
-    private ArrayList<Anchor> groupList = null;
-    private boolean group = false; 
-    
     private String id;
     
 	Anchor(Color color, DoubleProperty x, DoubleProperty y) {
@@ -251,8 +236,8 @@ public class ObjectsManipulation extends Application {
       if (bp.link.size() != 0) {
     	  
     	  for (Anchor item : bp.link) {
-     		item.centerXProperty().unbind();
-        	item.centerYProperty().unbind();
+      		item.centerXProperty().unbind();
+      		item.centerYProperty().unbind();
       		item.centerXProperty().bind(self.centerXProperty());
 			item.centerYProperty().bind(self.centerYProperty());
 			item.toBack();
@@ -263,7 +248,23 @@ public class ObjectsManipulation extends Application {
       
       bp.link.add(this);
       oldIndex = bp.link.size() - 1;
-     
+      
+      /*
+      this.centerXProperty().addListener(new ChangeListener<Number>(){
+		@Override
+		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+			move(self.centerXProperty().get(), self.centerYProperty().get());
+		}
+      });
+      
+      this.centerYProperty().addListener(new ChangeListener<Number>(){
+		@Override
+		public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+			move(self.centerXProperty().get(), self.centerYProperty().get());
+		}
+      });
+      */
+      
       enableDrag();
     }
 
@@ -273,17 +274,8 @@ public class ObjectsManipulation extends Application {
 		
 		this.notDraggeble = notDraggeble;
 	}
-
-	Anchor(Color color, DoubleProperty x, DoubleProperty y, boolean notDraggeble, boolean group) {
-		
-		this(color, x, y);
-		
-		this.notDraggeble = notDraggeble;
-		this.group = group;
-		
-	}	
-    
-	private void enableDrag() {
+	
+    private void enableDrag() {
       final Delta dragDelta = new Delta();
       setOnMousePressed(new EventHandler<MouseEvent>() {
         @Override public void handle(MouseEvent mouseEvent) {
@@ -303,17 +295,7 @@ public class ObjectsManipulation extends Application {
           double newX = mouseEvent.getX() + dragDelta.x;
           double newY = mouseEvent.getY() + dragDelta.y;
           
-          if (!notDraggeble) {
-        	  
-        	  move(newX, newY, self);
-		
-		  	  setCenterX(newX);
-		  	  setCenterY(newY);
-          }
-          
-          if (group) {
-        	  moveGroup(groupList);
-          }
+          if (!notDraggeble) move(newX, newY);
 		}
       });
       setOnMouseEntered(new EventHandler<MouseEvent>() {
@@ -332,17 +314,7 @@ public class ObjectsManipulation extends Application {
       });
     }
     
-	private void moveGroup(ArrayList<Anchor> group) {
-		for (Anchor item : group) {
-			move(item.getCenterX(),item.getCenterY(), item);
-		}
-	}
-	
-	public void setGroup(ArrayList<Anchor> groupList){
-		this.groupList = groupList;
-	}
-	
-    private void move(double newX, double newY, Anchor self){
+    private void move(double newX, double newY){
     	if ((newX < 0) || (newX > WindowX - 1)) return; 
         if ((newY < 0) || (newY > WindowY - 1)) return;
         
@@ -361,18 +333,12 @@ public class ObjectsManipulation extends Application {
 	        	  self.oldX = new SimpleDoubleProperty(newX);
 	        	  self.oldY = new SimpleDoubleProperty(newY);
 		        
-	        	  if (!group) {
-		        	  self.centerXProperty().unbind();
-		        	  self.centerYProperty().unbind();
-	        	  }
+	        	  self.centerXProperty().unbind();
+	        	  self.centerYProperty().unbind();
 	        	  
 	        	  for ( Anchor item : bp.link) {
-	        		
-	        		if (!item.notDraggeble) {  
-		        		item.centerXProperty().unbind();
-		        		item.centerYProperty().unbind();
-	        		}
-	        		
+	        		item.centerXProperty().unbind();
+	        		item.centerYProperty().unbind();
 					item.centerXProperty().bind(self.centerXProperty());
 					item.centerYProperty().bind(self.centerYProperty());
 					item.toBack();
@@ -383,7 +349,9 @@ public class ObjectsManipulation extends Application {
   			  
   			  self.toFront();
   			  
-  		  
+  			  setCenterX(newX);
+	          setCenterY(newY);
+  			  
 	          } //Move block Stop    	
     }
     
