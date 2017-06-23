@@ -15,8 +15,8 @@ import javafx.scene.shape.*;
 import javafx.stage.Stage;
 
 public class LineManipulator extends Application {
-  public final int WindowX = 600;
-  public final int WindowY = 600;
+  public final int WindowX = 1200;
+  public final int WindowY = 800;
   public Pixel[][] pool = null;
   
   public static void main(String[] args) throws Exception { launch(args); }
@@ -24,7 +24,7 @@ public class LineManipulator extends Application {
 	pool = new Pixel[WindowX][WindowY];
 	
 	for (int i = 0; i < WindowX; i++) {
-		for (int j = 0; j < WindowX; j++) {
+		for (int j = 0; j < WindowY; j++) {
 			pool[i][j] = new Pixel();
 		}
 	}  
