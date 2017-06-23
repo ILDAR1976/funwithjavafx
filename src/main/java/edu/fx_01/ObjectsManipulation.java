@@ -14,7 +14,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.stage.Stage;
 
-public class LineManipulator extends Application {
+public class ObjectsManipulation extends Application {
   public final int WindowX = 600;
   public final int WindowY = 600;
   public Pixel[][] pool = null;
