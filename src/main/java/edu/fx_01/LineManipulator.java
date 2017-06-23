@@ -183,7 +183,6 @@ public class LineManipulator extends Application {
 	
     private void enableDrag() {
       final Delta dragDelta = new Delta();
-      
       setOnMousePressed(new EventHandler<MouseEvent>() {
         @Override public void handle(MouseEvent mouseEvent) {
           // record a delta distance for the drag and drop operation.
