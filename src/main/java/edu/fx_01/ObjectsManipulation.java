@@ -76,84 +76,67 @@ public class ObjectsManipulation extends Application {
   
   class BlockIha extends Group{
 	 Pixel[][] pool = null;
-	 Block main;
-	 Anchor anc_01;
-	 Anchor anc_02;
-	 Anchor anc_03;
-	 
-	 SimpleDoubleProperty delta0;
-	 SimpleDoubleProperty delta1;
-	 SimpleDoubleProperty delta2;
-	 
-	 SimpleDoubleProperty delta1A;
-	 SimpleDoubleProperty delta1B;
-	 SimpleDoubleProperty delta1C;
-	 
 	 DoubleProperty startX;
 	 DoubleProperty startY;
+	 Block main;
+	 ArrayList<Bind> binder = new ArrayList<Bind>();
 	 
-	 NumberBinding sum1X;
-	 NumberBinding sum1Y;
-	 
-	 NumberBinding sum2X;
-	 NumberBinding sum2Y;
-
-	 NumberBinding sum3X;
-	 NumberBinding sum3Y;
 	 
 	 public BlockIha(int startX, int startY, Pixel[][] pool){
 		 this.pool = pool;
 		 this.startX =  new SimpleDoubleProperty(startX);
 		 this.startY =  new SimpleDoubleProperty(startY);
 		 
-		 delta0 = new SimpleDoubleProperty(0);
-		 delta1 = new SimpleDoubleProperty(0);
-		 delta2 = new SimpleDoubleProperty(0);
-		 
-		 delta1A = new SimpleDoubleProperty(20);
-		 delta1B = new SimpleDoubleProperty(40);		 
-		 delta1C = new SimpleDoubleProperty(60);
-		 
-		 ArrayList<Anchor> groupList = new ArrayList<Anchor>();
 		 
 		 this.main = new Block(startX, startY, pool);
-		 this.anc_01 = new Anchor(Color.GRAY, new SimpleDoubleProperty(startX),new SimpleDoubleProperty(startY + 1), true);
-		 this.anc_02 = new Anchor(Color.GRAY, new SimpleDoubleProperty(startX),new SimpleDoubleProperty(startY + 2), true);
-		 this.anc_03 = new Anchor(Color.GRAY, new SimpleDoubleProperty(startX),new SimpleDoubleProperty(startY + 3), true);
-		 
 		 this.main.toBack();
+		
+		 ArrayList<Anchor> groupList = new ArrayList<Anchor>();
 		 
-		 sum1X = Bindings.add(this.delta0, this.main.layoutXProperty());
-		 sum1Y = Bindings.add(this.delta1A, this.main.layoutYProperty());
+		 Bind bind = new Bind();
 		 
-		 this.anc_01.centerXProperty().bind(sum1X);
-		 this.anc_01.centerYProperty().bind(sum1Y);
+		 int count = 5;
 		 
-		 sum2X = Bindings.add(this.delta1, this.main.layoutXProperty());
-		 sum2Y = Bindings.add(this.delta1B, this.main.layoutYProperty());
-
-		 this.anc_02.centerXProperty().bind(sum2X);
-		 this.anc_02.centerYProperty().bind(sum2Y);
-
-		 sum3X = Bindings.add(this.delta2, this.main.layoutXProperty());
-		 sum3Y = Bindings.add(this.delta1C, this.main.layoutYProperty());
-
-		 this.anc_03.centerXProperty().bind(sum3X);
-		 this.anc_03.centerYProperty().bind(sum3Y);
-
-		 groupList.add(this.anc_01);
-		 groupList.add(this.anc_02);
-		 groupList.add(this.anc_03);
+		 for (int i = 0; i < count; i++) {
+			 
+			 bind.anchor.add(new Anchor(Color.GRAY, new SimpleDoubleProperty(startX),new SimpleDoubleProperty(startY + i), true));
+			 
+			 bind.property.add(new SimpleDoubleProperty(0));
+			 bind.property.add(new SimpleDoubleProperty((i + 1) * 20));
+			 
+			 bind.summa.add(Bindings.add(bind.property.get(i * 2), this.main.layoutXProperty()));
+			 bind.summa.add(Bindings.add(bind.property.get((i * 2) + 1), this.main.layoutYProperty()));
+			 
+			 bind.anchor.get(i).centerXProperty().bind(bind.summa.get((i * 2)));
+			 bind.anchor.get(i).centerYProperty().bind(bind.summa.get((i * 2) + 1));
 		 
-		 this.anc_01.move((int) this.anc_01.centerXProperty().get(), (int) this.anc_01.centerYProperty().get(), this.anc_01);
-		 this.anc_02.move((int) this.anc_02.centerXProperty().get(), (int) this.anc_02.centerYProperty().get(), this.anc_02);
-		 this.anc_03.move((int) this.anc_03.centerXProperty().get(), (int) this.anc_03.centerYProperty().get(), this.anc_03);
+			 groupList.add(bind.anchor.get(i)); 
+		 
+			 bind.anchor.get(i).move((int) bind.anchor.get(i).centerXProperty().get(), 
+					                 (int) bind.anchor.get(i).centerYProperty().get(), 
+					                 bind.anchor.get(i));
+		 }
 		 
 		 this.main.setGroup(groupList);
 		 
-		 getChildren().addAll(main, anc_01, anc_02, anc_03);	 
+		 getChildren().add(main);
+				 
+		 for (int i = 0; i < count; i++) {
+			 getChildren().add(bind.anchor.get(i));
+		 }
+		 	 
 	 }
-	 
+	
+	 class Bind {
+		 public ArrayList<Anchor> anchor = null;
+		 public ArrayList<SimpleDoubleProperty> property = null;
+		 public ArrayList<NumberBinding> summa = null;
+		 public Bind(){
+			 this.anchor = new ArrayList<Anchor>();
+			 this.property = new ArrayList<SimpleDoubleProperty>();
+			 this.summa = new ArrayList<NumberBinding>();
+		 }
+	 }
   }
   
   class LineIha extends Group{
@@ -390,4 +373,6 @@ public class ObjectsManipulation extends Application {
   class Pixel {
 	  public ArrayList<Anchor> link = new ArrayList<Anchor>();
   }
+
+ 
 }
