@@ -40,7 +40,18 @@ public class ObjectsManipulation extends Application {
     root.getChildren().addAll(
     		new LineIha(10,10,200,10,Color.RED, pool),
     		new LineIha(40,100,200,10,Color.RED, pool),
-     		new BlockIha(240,440, pool)
+    		new LineIha(12,110,200,23,Color.RED, pool),
+    		new LineIha(45,300,345,76,Color.RED, pool),
+    		new LineIha(98,400,230,23,Color.RED, pool),
+    		new LineIha(12,200,220,56,Color.RED, pool),
+    		new LineIha(14,120,100,20,Color.RED, pool),
+    		new LineIha(50,135,233,30,Color.RED, pool),
+    		new LineIha(99,112,555,40,Color.RED, pool),
+    		new LineIha(36,150,320,50,Color.RED, pool),
+     		new BlockIha(240,440, pool),
+     		new BlockIha(40,140, pool),
+     		new BlockIha(340,140, pool),
+     		new BlockIha(10,340, pool)
       );
     
     Scene scene = new Scene(root, WindowX, WindowY, Color.ALICEBLUE);
@@ -219,10 +230,8 @@ public class ObjectsManipulation extends Application {
   class Anchor extends Circle { 
 	private DoubleProperty oldX = new SimpleDoubleProperty(0);
     private DoubleProperty oldY = new SimpleDoubleProperty(0);
-    private int oldIndex = 0;
     private Anchor self = this;
     private boolean notDraggeble = false;
-    
     private String id;
     
 	Anchor(Color color, DoubleProperty x, DoubleProperty y,Pixel[][] pool) {
@@ -258,7 +267,6 @@ public class ObjectsManipulation extends Application {
       }
       
       bp.link.add(this);
-      oldIndex = bp.link.size() - 1;
      
       enableDrag();
     }
@@ -322,7 +330,7 @@ public class ObjectsManipulation extends Application {
         	  Pixel bp = pool[(int)self.oldX.get()][(int)self.oldY.get()];
  
         	  if (bp.link.size() != 0) {
-        		  bp.link.remove(self.oldIndex);
+        		  bp.link.clear();
         	  }
 	        	  
           } //Eraser block Stop
@@ -351,7 +359,6 @@ public class ObjectsManipulation extends Application {
 		    	  		
 			  	  	    bp.link.add(self);
 						
-			  	  		self.oldIndex = bp.link.size() - 1;
 						self.toBack();  
 						item.toFront();
 		    	  		return;
@@ -368,7 +375,6 @@ public class ObjectsManipulation extends Application {
         	  }
         	  
 	  		  bp.link.add(self);
-			  self.oldIndex = bp.link.size() - 1;
 			  
 			  self.toFront();
 		  
