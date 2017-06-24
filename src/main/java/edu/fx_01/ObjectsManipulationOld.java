@@ -21,15 +21,15 @@ import javafx.util.converter.DoubleStringConverter;
 public class ObjectsManipulationOld extends Application {
   public final int WindowX = 600;
   public final int WindowY = 600;
-  public Pixel[][] pool = null;
+  public Pixel[][] poolOld = null;
   
   public static void main(String[] args) throws Exception { launch(args); }
   @Override public void start(final Stage stage) throws Exception {
-	pool = new Pixel[WindowX][WindowY];
+	poolOld = new Pixel[WindowX][WindowY];
 	
 	for (int i = 0; i < WindowX; i++) {
 		for (int j = 0; j < WindowY; j++) {
-			pool[i][j] = new Pixel();
+			poolOld[i][j] = new Pixel();
 		}
 	}  
 	
@@ -109,7 +109,7 @@ public class ObjectsManipulationOld extends Application {
 		 delta2A = new SimpleDoubleProperty(30);
 		 delta2B = new SimpleDoubleProperty(60);		 
 		 
-		 this.main = new Block(startX, startY);
+		 //this.main = new Block(startX, startX, poolOld);
 		 this.anc_01 = new Anchor(Color.RED, new SimpleDoubleProperty(this.startX.get()),new SimpleDoubleProperty(this.startY.get() + 0));
 		 this.anc_02 = new Anchor(Color.BLACK, new SimpleDoubleProperty(this.startX.get()),new SimpleDoubleProperty(this.startY.get() + 1));
 		 //this.anc_03 = new Anchor(Color.BLACK, new SimpleDoubleProperty(this.startX.get() - 15),new SimpleDoubleProperty(this.startY.get() + 7));
@@ -227,7 +227,7 @@ public class ObjectsManipulationOld extends Application {
       oldX = new SimpleDoubleProperty(x.get());
       oldY = new SimpleDoubleProperty(y.get());
        
-      Pixel bp = pool[(int)x.get()][(int)y.get()];
+      Pixel bp = poolOld[(int)x.get()][(int)y.get()];
    	  oldLink = new ArrayList<Anchor>();
    	  
 	  this.centerXProperty().unbind();
@@ -320,7 +320,7 @@ public class ObjectsManipulationOld extends Application {
         
       	  { //Eraser block Start
       		  
-	        	  Pixel bp = pool[(int)self.oldX.get()][(int)self.oldY.get()];
+	        	  Pixel bp = poolOld[(int)self.oldX.get()][(int)self.oldY.get()];
 	 
 	        	  if (bp.link.size() != 0) {
 	        		  bp.link.remove(self.oldIndex);
@@ -329,7 +329,7 @@ public class ObjectsManipulationOld extends Application {
 	          } //Eraser block Stop
 	          
 	          { //Move block Start
-	        	  Pixel bp = pool[(int)newX][(int)newY];
+	        	  Pixel bp = poolOld[(int)newX][(int)newY];
 	        	  self.oldX = new SimpleDoubleProperty(newX);
 	        	  self.oldY = new SimpleDoubleProperty(newY);
 		        
