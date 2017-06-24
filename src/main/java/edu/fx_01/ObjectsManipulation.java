@@ -297,9 +297,11 @@ public class ObjectsManipulation extends Application {
 		@Override public void handle(MouseEvent mouseEvent) {
           double newX = mouseEvent.getX() + dragDelta.x;
           double newY = mouseEvent.getY() + dragDelta.y;
-	
-	  	  setCenterX(newX);
-	  	  setCenterY(newY);
+          
+          if (!self.centerXProperty().isBound()) 
+	  	    setCenterX(newX);
+          if (!self.centerYProperty().isBound())
+        	setCenterY(newY);
 	  	  
 	  	  move(newX, newY, self);
           
