@@ -25,10 +25,10 @@ public class ObjectsManipulation extends Application {
   
   public static void main(String[] args) throws Exception { launch(args); }
   @Override public void start(final Stage stage) throws Exception {
-	pool = new Pixel[WindowX][WindowY];
+	pool = new Pixel[WindowX + 300][WindowY + 300];
 	
-	for (int i = 0; i < WindowX; i++) {
-		for (int j = 0; j < WindowY; j++) {
+	for (int i = 0; i < WindowX + 300; i++) {
+		for (int j = 0; j < WindowY + 300; j++) {
 			pool[i][j] = new Pixel();
 		}
 	}  
@@ -36,22 +36,19 @@ public class ObjectsManipulation extends Application {
 	stage.setTitle("Line Manipulation Sample");
     
     Group root = new Group();
-    
+
     root.getChildren().addAll(
-    		new LineIha(10,10,200,10,Color.RED, pool),
-    		new LineIha(40,100,200,10,Color.RED, pool),
-    		new LineIha(12,110,200,23,Color.RED, pool),
-    		new LineIha(45,300,345,76,Color.RED, pool),
-    		new LineIha(98,400,230,23,Color.RED, pool),
-    		new LineIha(12,200,220,56,Color.RED, pool),
-    		new LineIha(14,120,100,20,Color.RED, pool),
-    		new LineIha(50,135,233,30,Color.RED, pool),
-    		new LineIha(99,112,555,40,Color.RED, pool),
-    		new LineIha(36,150,320,50,Color.RED, pool),
-     		new BlockIha(240,440, pool),
-     		new BlockIha(40,140, pool),
-     		new BlockIha(340,140, pool),
-     		new BlockIha(10,340, pool)
+    		new LineIha(10,10,590,10,Color.RED, pool),
+    		new LineIha(10,35,590,35,Color.BLUE, pool),
+    		new LineIha(10,60,590,60,Color.GREEN, pool),
+       		new BlockIha(50,100, pool),
+     		new BlockIha(50,400, pool),
+     		new BlockIha(450,100, pool),
+     		new BlockIha(450,400, pool),
+     		new LineIha(70,250,300,400,Color.RED, pool),
+     		new LineIha(300,400,530,250,Color.CHOCOLATE, pool),
+     		new LineIha(150,420,450,120,Color.BROWN, pool),
+     		new LineIha(150,120,450,420,Color.BLACK, pool)
       );
     
     Scene scene = new Scene(root, WindowX, WindowY, Color.ALICEBLUE);
@@ -95,15 +92,28 @@ public class ObjectsManipulation extends Application {
 		 
 		 Bind bind = new Bind();
 		 
-		 int count = 5;
+		 int count = 22;
+		 int Height = 150;
+		 int Width = 100;
 		 
 		 for (int i = 0; i < count; i++) {
 			 
-			 bind.anchor.add(new Anchor(Color.GRAY, new SimpleDoubleProperty(startX),new SimpleDoubleProperty(startY + i), true));
+			 bind.anchor.add(new Anchor(Color.GRAY, new SimpleDoubleProperty(startX - i - 1), new SimpleDoubleProperty(startY + i + 1), pool, true));
 			 
-			 bind.property.add(new SimpleDoubleProperty(0));
-			 bind.property.add(new SimpleDoubleProperty((i + 1) * 20));
-			 
+			 if (i < 7) {
+				 bind.property.add(new SimpleDoubleProperty(0));
+				 bind.property.add(new SimpleDoubleProperty((i + 1) * 20));
+			 } else if ((i > 6) && (i < 11)) {
+				 bind.property.add(new SimpleDoubleProperty((i - 6) * 20));
+				 bind.property.add(new SimpleDoubleProperty(Height));
+			 } else if ((i > 10) && (i < 18)) {
+				 bind.property.add(new SimpleDoubleProperty(Width));
+				 bind.property.add(new SimpleDoubleProperty((i - 10) * 20));
+			 } else if ((i > 17) && (i < 23)) {
+				 bind.property.add(new SimpleDoubleProperty((i - 17) * 20));
+				 bind.property.add(new SimpleDoubleProperty(0));
+			 }
+				 
 			 bind.summa.add(Bindings.add(bind.property.get(i * 2), this.main.layoutXProperty()));
 			 bind.summa.add(Bindings.add(bind.property.get((i * 2) + 1), this.main.layoutYProperty()));
 			 
@@ -152,13 +162,14 @@ public class ObjectsManipulation extends Application {
 	
 	  
 	  public LineIha(int startX, int startY, int endX, int endY, Color color, Pixel[][] pool){
-			this.startX =  new SimpleDoubleProperty(startX);
+			
+		    this.startX =  new SimpleDoubleProperty(startX);
 			this.startY =  new SimpleDoubleProperty(startY);
 			this.endX   =  new SimpleDoubleProperty(endX);
 			this.endY   =  new SimpleDoubleProperty(endY);
 		  
-			this.start  = new Anchor(color, this.startX, this.startY, pool);
-			this.end    = new Anchor(color, this.endX, this.endY, pool);
+			this.start  = new Anchor(color, this.startX, this.startY, pool, false);
+			this.end    = new Anchor(color, this.endX, this.endY, pool, false);
 			
 			this.line   = new BoundLine(color, this.startX, this.startY, this.endX, this.endY);
 	  
@@ -215,16 +226,19 @@ public class ObjectsManipulation extends Application {
     private DoubleProperty oldY = new SimpleDoubleProperty(0);
     private Anchor self = this;
     private boolean notDraggeble = false;
+    private boolean isFigure = false;
     private String id;
     
-	Anchor(Color color, DoubleProperty x, DoubleProperty y,Pixel[][] pool) {
+	Anchor(Color color, DoubleProperty x, DoubleProperty y, Pixel[][] pool, boolean notDraggeble) {
       super(x.get(), y.get(), 1);
       id = UUID.randomUUID().toString();
       setFill(color.deriveColor(1, 1, 1, 0.5));
       setStroke(color);
       setStrokeWidth(2);
       setStrokeType(StrokeType.OUTSIDE);
-    
+      
+      this.notDraggeble = notDraggeble;
+      
       x.bind(centerXProperty());
       y.bind(centerYProperty());
       
@@ -233,18 +247,36 @@ public class ObjectsManipulation extends Application {
        
       Pixel bp = pool[(int)x.get()][(int)y.get()];
    	  
-	  this.centerXProperty().unbind();
-	  this.centerYProperty().unbind();
-
+      if (!notDraggeble) {
+    	  this.centerXProperty().unbind();
+    	  this.centerYProperty().unbind();
+      }
+      
       if (bp.link.size() != 0) {
     	  
     	  for (Anchor item : bp.link) {
-     		item.centerXProperty().unbind();
-        	item.centerYProperty().unbind();
-      		item.centerXProperty().bind(self.centerXProperty());
-			item.centerYProperty().bind(self.centerYProperty());
-			item.toBack();
-     	  }
+     		if (!notDraggeble) {
+	    		if (!item.notDraggeble) {
+	     			item.centerXProperty().unbind();
+		        	item.centerYProperty().unbind();
+		        	item.centerXProperty().bind(this.centerXProperty());
+					item.centerYProperty().bind(this.centerYProperty());
+					item.toBack();
+	    		} else {
+		        	this.centerXProperty().bind(item.centerXProperty());
+		        	this.centerYProperty().bind(item.centerYProperty());
+					this.notDraggeble = true;
+					this.toBack();
+					item.toFront();
+					bp.link.add(this);
+					enableDrag();
+					return;
+	    		}
+     		} else {
+	        	item.centerXProperty().bind(this.centerXProperty());
+				item.centerYProperty().bind(this.centerYProperty());
+     		}
+    	  }
     	  
     	  this.toFront();
       }
@@ -253,13 +285,6 @@ public class ObjectsManipulation extends Application {
      
       enableDrag();
     }
-
-	Anchor(Color color, DoubleProperty x, DoubleProperty y, boolean notDraggeble) {
-		
-		this(color, x, y, pool);
-		
-		this.notDraggeble = notDraggeble;
-	}
 
 	private void enableDrag() {
       final Delta dragDelta = new Delta();
@@ -350,13 +375,16 @@ public class ObjectsManipulation extends Application {
 		    	  	}
 		    	  }
         	  } else {
-		    	  for ( Anchor item : bp.link) {
+    	  		  
+        		  /*
+        		  for ( Anchor item : bp.link) {
 		    		item.centerXProperty().unbind();
 		    		item.centerYProperty().unbind();
 		    		item.centerXProperty().bind(self.centerXProperty());
 					item.centerYProperty().bind(self.centerYProperty());
 					item.toBack();
 		    	  }
+        		  */
         	  }
         	  
 	  		  bp.link.add(self);
