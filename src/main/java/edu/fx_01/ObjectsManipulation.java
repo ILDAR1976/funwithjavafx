@@ -37,6 +37,13 @@ public class ObjectsManipulation extends Application {
     
     Group root = new Group();
 
+    /*
+    root.getChildren().addAll(
+    		new LineIha(10,35,300,335,Color.BLUE, pool),
+    		new LineIha(10,10,590,310,Color.RED, pool)
+      );
+	*/
+    
     root.getChildren().addAll(
     		new LineIha(10,10,590,10,Color.RED, pool),
     		new LineIha(10,35,590,35,Color.BLUE, pool),
@@ -50,7 +57,7 @@ public class ObjectsManipulation extends Application {
      		new LineIha(150,420,450,120,Color.BROWN, pool),
      		new LineIha(150,120,450,420,Color.BLACK, pool)
       );
-    
+
     Scene scene = new Scene(root, WindowX, WindowY, Color.ALICEBLUE);
     
     scene.widthProperty().addListener(new ChangeListener<Number>() {
@@ -168,44 +175,15 @@ public class ObjectsManipulation extends Application {
 			this.endX   =  new SimpleDoubleProperty(endX);
 			this.endY   =  new SimpleDoubleProperty(endY);
 		  
+			
 			this.start  = new Anchor(color, this.startX, this.startY, pool, false);
+			this.start.setParentAnchor(this);
 			this.end    = new Anchor(color, this.endX, this.endY, pool, false);
+			this.end.setParentAnchor(this);
 			
 			this.line   = new BoundLine(color, this.startX, this.startY, this.endX, this.endY);
 	  
 			getChildren().addAll(line, start, end);
-	  }
-	  
-	  public int setStartX() {
-		  return (int) startX.get();
-	  }
-
-	  public void setStartX(int startX) {
-		  this.startX = new SimpleDoubleProperty(startX);
-	  }
-	  
-	  public int setStartY() {
-		  return (int) startY.get();
-	  }
-
-	  public void setStartY(int startY) {
-		  this.startY = new SimpleDoubleProperty(startY);
-	  }
-	  
-	  public int setEndX() {
-		  return (int) endX.get();
-	  }
-
-	  public void setEndX(int endX) {
-		  this.startX = new SimpleDoubleProperty(endX);
-	  }
-	  
-	  public int setEndY() {
-		  return (int) endY.get();
-	  }
-
-	  public void setEndY(int EndY) {
-		  this.endY = new SimpleDoubleProperty(EndY);
 	  }
   }
   
@@ -227,6 +205,7 @@ public class ObjectsManipulation extends Application {
     private Anchor self = this;
     private boolean notDraggeble = false;
     private boolean isFigure = false;
+    private Object parent = null;
     private String id;
     
 	Anchor(Color color, DoubleProperty x, DoubleProperty y, Pixel[][] pool, boolean notDraggeble) {
@@ -252,40 +231,43 @@ public class ObjectsManipulation extends Application {
     	  this.centerYProperty().unbind();
       }
       
-      if (bp.link.size() != 0) {
-    	  
-    	  for (Anchor item : bp.link) {
-     		if (!notDraggeble) {
-	    		if (!item.notDraggeble) {
-	     			item.centerXProperty().unbind();
-		        	item.centerYProperty().unbind();
-		        	item.centerXProperty().bind(this.centerXProperty());
-					item.centerYProperty().bind(this.centerYProperty());
-					item.toBack();
-	    		} else {
-		        	this.centerXProperty().bind(item.centerXProperty());
-		        	this.centerYProperty().bind(item.centerYProperty());
-					this.notDraggeble = true;
-					this.toBack();
-					item.toFront();
-					bp.link.add(this);
-					enableDrag();
-					return;
-	    		}
-     		} else {
+	  for (Anchor item : bp.link) {
+ 		if (!notDraggeble) {
+    		if (!item.notDraggeble) {
+     			item.centerXProperty().unbind();
+	        	item.centerYProperty().unbind();
 	        	item.centerXProperty().bind(this.centerXProperty());
 				item.centerYProperty().bind(this.centerYProperty());
-     		}
-    	  }
-    	  
-    	  this.toFront();
-      }
-      
+				item.toBack();
+    		} else {
+	        	this.centerXProperty().bind(item.centerXProperty());
+	        	this.centerYProperty().bind(item.centerYProperty());
+				this.notDraggeble = true;
+				this.toBack();
+				item.toFront();
+				bp.link.add(this);
+				enableDrag();
+				return;
+    		}
+ 		} else {
+        	item.centerXProperty().bind(this.centerXProperty());
+			item.centerYProperty().bind(this.centerYProperty());
+ 		}
+	  }
+	  
+	  this.toFront();
       bp.link.add(this);
-     
       enableDrag();
     }
 
+	private void setParentAnchor(Object parent){
+		this.parent = parent;
+	}
+	
+	private Object getParentAnchor(){
+		return this.parent;
+	}
+	
 	private void enableDrag() {
       final Delta dragDelta = new Delta();
       setOnMousePressed(new EventHandler<MouseEvent>() {
@@ -306,14 +288,24 @@ public class ObjectsManipulation extends Application {
           double newX = mouseEvent.getX() + dragDelta.x;
           double newY = mouseEvent.getY() + dragDelta.y;
           
-          if (!self.centerXProperty().isBound()) 
-	  	    setCenterX(newX);
-          if (!self.centerYProperty().isBound())
-        	setCenterY(newY);
-	  	  
-	  	  move(newX, newY, self);
+          move(newX, newY, self);
           
- 		}
+          if (!self.centerXProperty().isBound()) {
+        	  self.getParent().toFront();
+        	  self.setCenterX(newX);
+          } else {
+        	  self.getParent().toBack();
+          }
+          
+          if (!self.centerYProperty().isBound()) {
+        	  self.getParent().toFront();
+        	  self.setCenterY(newY);
+          } else {
+        	  self.getParent().toBack();
+          }
+          
+          
+		}
       });
       setOnMouseEntered(new EventHandler<MouseEvent>() {
         @Override public void handle(MouseEvent mouseEvent) {
@@ -351,47 +343,20 @@ public class ObjectsManipulation extends Application {
         	  self.oldY = new SimpleDoubleProperty(newY);
 	        
         	  if (!notDraggeble) {
-		    	  self.centerXProperty().unbind();
-		    	  self.centerYProperty().unbind();
-		    	  
 		    	  for ( Anchor item : bp.link) {
-		    		if (!item.notDraggeble) {
-			    		item.centerXProperty().unbind();
-			    		item.centerYProperty().unbind();
-						item.centerXProperty().bind(self.centerXProperty());
+		    		 if (!item.notDraggeble) {
+		    			item.centerXProperty().bind(self.centerXProperty());
 						item.centerYProperty().bind(self.centerYProperty());
-						item.toBack();
 		    	  	} else {
 			  	  		self.notDraggeble = true;
-			  	  		
-			  	  		self.centerXProperty().bind(item.centerXProperty());
+			  	  	    self.centerXProperty().bind(item.centerXProperty());
 			  	  	    self.centerYProperty().bind(item.centerYProperty());
-		    	  		
 			  	  	    bp.link.add(self);
-						
-						self.toBack();  
-						item.toFront();
 		    	  		return;
 		    	  	}
 		    	  }
-        	  } else {
-    	  		  
-        		  /*
-        		  for ( Anchor item : bp.link) {
-		    		item.centerXProperty().unbind();
-		    		item.centerYProperty().unbind();
-		    		item.centerXProperty().bind(self.centerXProperty());
-					item.centerYProperty().bind(self.centerYProperty());
-					item.toBack();
-		    	  }
-        		  */
-        	  }
-        	  
-	  		  bp.link.add(self);
-			  
-			  self.toFront();
-		  
-	  
+        	  } 
+ 	  		  bp.link.add(self);
           } //Move block Stop    	
     }
     
