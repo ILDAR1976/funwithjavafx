@@ -213,6 +213,7 @@ public class ObjectsManipulation extends Application {
     private DoubleProperty oldY = new SimpleDoubleProperty(0);
     private Anchor self = this;
     private boolean notDraggeble = false;
+    private boolean selected = false;
     private Object parent = null;
     private String id;
     
@@ -273,6 +274,10 @@ public class ObjectsManipulation extends Application {
 		Pixel bp = pool[(int)self.centerXProperty().get()][(int)self.centerXProperty().get()];
 		bp.link.remove(self);
    }
+	
+	public boolean getDraggeble(){
+		return notDraggeble;
+	}
 	
 	private void setParentAnchor(Object parent){
 		this.parent = parent;
@@ -358,7 +363,7 @@ public class ObjectsManipulation extends Application {
 	        
         	  if (!notDraggeble) {
 		    	  for ( Anchor item : bp.link) {
-		    		 if (!item.notDraggeble) {
+		    		if (!item.notDraggeble) {
 		    			item.centerXProperty().bind(self.centerXProperty());
 						item.centerYProperty().bind(self.centerYProperty());
 		    	  	} else {
@@ -387,10 +392,11 @@ public class ObjectsManipulation extends Application {
 	  final Delta dragDelta = new Delta();
 	  scene.setOnMousePressed(new EventHandler<MouseEvent>() {
 	    @Override public void handle(MouseEvent mouseEvent) {
+	      
+	      PickResult pr = mouseEvent.getPickResult();
+	      Node rn = pr.getIntersectedNode();
+	      
 	      if (mouseEvent.isSecondaryButtonDown()){
-	    	  PickResult pr = mouseEvent.getPickResult();
-
-	    	  Node rn = pr.getIntersectedNode();
 	    	  if ( rn != null){
 	    		  Node parent3 = rn.getParent().getParent().getParent();
 	    		  Node parent1 = rn.getParent();
@@ -409,6 +415,28 @@ public class ObjectsManipulation extends Application {
     			  }
 	    	  }
 	      }
+	      
+	      if (mouseEvent.isPrimaryButtonDown()){
+	    	  if ( rn != null){
+	    		  if (rn instanceof Circle) {
+	    			  
+	    			  Anchor circle = (Anchor) rn;
+	    			  
+	    			  int x = (int) circle.centerXProperty().get();
+	    			  int y = (int) circle.centerYProperty().get();
+	    			  
+	    			  Pixel bp = pool[x][y];
+	    			  
+	    			  if (!bp.link.isEmpty() && circle.getDraggeble()) {
+		    			  
+	    				  Group gr = new LineIha(x, y, x + 10, y + 10, Color.RED, pool);
+		    			  
+		    			  root.getChildren().add(gr);
+	    			  }
+	    		  }
+	    	  }
+	       }
+	      
 	    }
 	  });
   }
