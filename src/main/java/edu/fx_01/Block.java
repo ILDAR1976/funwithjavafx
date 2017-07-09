@@ -67,7 +67,7 @@ public class Block extends AnchorPane {
 	      });
 	      setOnMouseReleased(new EventHandler<MouseEvent>() {
 	        @Override public void handle(MouseEvent mouseEvent) {
-	          getScene().setCursor(Cursor.HAND);
+	          if (getScene() != null) getScene().setCursor(Cursor.HAND);
 	        }
 	      });
 	      setOnMouseDragged(new EventHandler<MouseEvent>() {

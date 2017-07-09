@@ -12,11 +12,10 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.scene.*;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.PickResult;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
-import javafx.util.converter.DoubleStringConverter;
 
 public class ObjectsManipulation extends Application {
   public final int WindowX = 600;
@@ -72,8 +71,10 @@ public class ObjectsManipulation extends Application {
         }
     });
 	scene.getStylesheets().add(getClass().getResource("/application.css").toExternalForm());
-
-    stage.setScene(scene);
+	
+	enableDrag(scene, root);
+    
+	stage.setScene(scene);
     
     stage.show();
   }
@@ -195,7 +196,7 @@ public class ObjectsManipulation extends Application {
       endYProperty().bind(endY);
       
       setStroke(color.deriveColor(0, 1, 1, 0.5));
-      setMouseTransparent(true);
+      
     }
   }
 
@@ -204,7 +205,6 @@ public class ObjectsManipulation extends Application {
     private DoubleProperty oldY = new SimpleDoubleProperty(0);
     private Anchor self = this;
     private boolean notDraggeble = false;
-    private boolean isFigure = false;
     private Object parent = null;
     private String id;
     
@@ -280,7 +280,7 @@ public class ObjectsManipulation extends Application {
       });
       setOnMouseReleased(new EventHandler<MouseEvent>() {
         @Override public void handle(MouseEvent mouseEvent) {
-          getScene().setCursor(Cursor.HAND);
+          if (getScene() != null) getScene().setCursor(Cursor.HAND);
         }
       });
       setOnMouseDragged(new EventHandler<MouseEvent>() {
@@ -367,5 +367,28 @@ public class ObjectsManipulation extends Application {
 	  public ArrayList<Anchor> link = new ArrayList<Anchor>();
   }
 
- 
+  private class Delta { double x, y; }
+  
+  private void enableDrag(Scene scene, Group root) {
+	  final Delta dragDelta = new Delta();
+	  scene.setOnMousePressed(new EventHandler<MouseEvent>() {
+	    @Override public void handle(MouseEvent mouseEvent) {
+	      if (mouseEvent.isSecondaryButtonDown()){
+	    	  PickResult pr = mouseEvent.getPickResult();
+
+	    	  Node rn = pr.getIntersectedNode();
+	    	  if ( rn != null){
+	    		  if (rn.getParent().getParent().getParent() != null) {
+	    			  root.getChildren().remove(rn.getParent().getParent().getParent());
+	    			  System.out.println(rn.getParent().getParent().getParent());
+	    		  } else {
+	    			  root.getChildren().remove(rn.getParent());
+	    			  System.out.println(rn.getParent());
+	    		  }
+	    	  }
+	      }
+	    }
+	  });
+  }
+
 }
