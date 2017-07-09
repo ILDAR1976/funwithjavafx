@@ -85,18 +85,15 @@ public class ObjectsManipulation extends Application {
 	 DoubleProperty startY;
 	 Block main;
 	 ArrayList<Bind> binder = new ArrayList<Bind>();
-	 
+	 ArrayList<Anchor> groupList = new ArrayList<Anchor>();
 	 
 	 public BlockIha(int startX, int startY, Pixel[][] pool){
 		 this.pool = pool;
 		 this.startX =  new SimpleDoubleProperty(startX);
 		 this.startY =  new SimpleDoubleProperty(startY);
 		 
-		 
 		 this.main = new Block(startX, startY, pool);
 		 this.main.toBack();
-		
-		 ArrayList<Anchor> groupList = new ArrayList<Anchor>();
 		 
 		 Bind bind = new Bind();
 		 
@@ -155,6 +152,12 @@ public class ObjectsManipulation extends Application {
 			 this.summa = new ArrayList<NumberBinding>();
 		 }
 	 }
+  
+	 public void dispose(){
+		 for (Anchor item : groupList) {
+			item.dispose();
+		}
+	 }
   }
   
   class LineIha extends Group{
@@ -185,6 +188,11 @@ public class ObjectsManipulation extends Application {
 			this.line   = new BoundLine(color, this.startX, this.startY, this.endX, this.endY);
 	  
 			getChildren().addAll(line, start, end);
+	  }
+	  
+	  public void dispose(){
+		 start.dispose();
+		 end.dispose();
 	  }
   }
   
@@ -260,6 +268,12 @@ public class ObjectsManipulation extends Application {
       enableDrag();
     }
 
+
+	protected void dispose(){
+		Pixel bp = pool[(int)self.centerXProperty().get()][(int)self.centerXProperty().get()];
+		bp.link.remove(self);
+   }
+	
 	private void setParentAnchor(Object parent){
 		this.parent = parent;
 	}
@@ -378,13 +392,21 @@ public class ObjectsManipulation extends Application {
 
 	    	  Node rn = pr.getIntersectedNode();
 	    	  if ( rn != null){
-	    		  if (rn.getParent().getParent().getParent() != null) {
-	    			  root.getChildren().remove(rn.getParent().getParent().getParent());
-	    			  System.out.println(rn.getParent().getParent().getParent());
+	    		  Node parent3 = rn.getParent().getParent().getParent();
+	    		  Node parent1 = rn.getParent();
+	    		  Node parent = null;
+	    		  
+	    		  if (parent3 != null) {
+	    			  parent = parent3;
 	    		  } else {
-	    			  root.getChildren().remove(rn.getParent());
-	    			  System.out.println(rn.getParent());
+	    			  parent = parent1;
 	    		  }
+
+	    		  if (parent != null) {
+	    			  if ((parent instanceof LineIha)) ((LineIha) parent).dispose(); 
+	    			  if ((parent instanceof BlockIha)) ((BlockIha) parent).dispose();
+	    			  root.getChildren().remove(parent);
+    			  }
 	    	  }
 	      }
 	    }
