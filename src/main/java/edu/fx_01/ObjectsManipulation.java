@@ -1,6 +1,7 @@
 package edu.fx_01;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.UUID;
 
 import javafx.application.Application;
@@ -86,6 +87,7 @@ public class ObjectsManipulation extends Application {
 	 Block main;
 	 ArrayList<Bind> binder = new ArrayList<Bind>();
 	 ArrayList<Anchor> groupList = new ArrayList<Anchor>();
+	 HashSet<Object> link = new HashSet<Object>();
 	 
 	 public BlockIha(int startX, int startY, Pixel[][] pool){
 		 this.pool = pool;
@@ -97,13 +99,18 @@ public class ObjectsManipulation extends Application {
 		 
 		 Bind bind = new Bind();
 		 
-		 int count = 22;
+		 int count  = 22;
 		 int Height = 150;
-		 int Width = 100;
+		 int Width  = 100;
 		 
 		 for (int i = 0; i < count; i++) {
 			 
-			 bind.anchor.add(new Anchor(Color.GRAY, new SimpleDoubleProperty(startX - i - 1), new SimpleDoubleProperty(startY + i + 1), pool, true));
+			 bind.anchor.add(new Anchor(Color.GRAY, 
+					                    new SimpleDoubleProperty(startX - i - 1), 
+					                    new SimpleDoubleProperty(startY + i + 1), 
+					                    pool, 
+					                    true,
+					                    this));
 			 
 			 if (i < 7) {
 				 bind.property.add(new SimpleDoubleProperty(0));
@@ -158,13 +165,27 @@ public class ObjectsManipulation extends Application {
 			item.dispose();
 		}
 	 }
+	 
+	 public HashSet<Object> getLink() {
+		  return link;
+     }
+		
+	 public void setLink(Object link) {
+		  this.link.add(link);
+	 }
+	  
+	 public void removeLink(Object o) {
+		  this.link.remove(o);
+	 }
   }
   
   class LineIha extends Group{
 	  
 	  private Line line;
+
 	  private Anchor start;
 	  private Anchor end;
+	  HashSet<Object> link = new HashSet<Object>();
 	  
 	  DoubleProperty startX;
 	  DoubleProperty startY;
@@ -179,8 +200,8 @@ public class ObjectsManipulation extends Application {
 			this.endY   =  new SimpleDoubleProperty(endY);
 		  
 			
-			this.start  = new Anchor(color, this.startX, this.startY, pool, false);
-			this.end    = new Anchor(color, this.endX, this.endY, pool, false);
+			this.start  = new Anchor(color, this.startX, this.startY, pool, false, this);
+			this.end    = new Anchor(color, this.endX, this.endY, pool, false, this);
 
 			this.start.setParentAnchor(this);
 			this.end.setParentAnchor(this);
@@ -204,6 +225,19 @@ public class ObjectsManipulation extends Application {
 		 start.dispose();
 		 end.dispose();
 	  }
+  
+	  public HashSet<Object> getLink() {
+		  return link;
+      }
+		
+	  public void setLink(Object link) {
+		  this.link.add(link);
+	  }
+	  
+	  public void removeLink(Object o) {
+		  this.link.remove(o);
+	  }
+
   }
   
   class BoundLine extends Line {
@@ -225,9 +259,10 @@ public class ObjectsManipulation extends Application {
     private boolean notDraggeble = false;
     private boolean selected = false;
     private Object parent = null;
-    private String id;
+    @SuppressWarnings("unused")
+	private String id;
     
-	Anchor(Color color, DoubleProperty x, DoubleProperty y, Pixel[][] pool, boolean notDraggeble) {
+	Anchor(Color color, DoubleProperty x, DoubleProperty y, Pixel[][] pool, boolean notDraggeble, Node parent) {
       super(x.get(), y.get(), 1);
       id = UUID.randomUUID().toString();
       setFill(color.deriveColor(1, 1, 1, 0.5));
@@ -249,16 +284,38 @@ public class ObjectsManipulation extends Application {
     	  this.centerXProperty().unbind();
     	  this.centerYProperty().unbind();
       }
-      
-	  for (Anchor item : bp.link) {
- 		if (!notDraggeble) {
+	  
+      for (Anchor item : bp.link) {
+			Node ip = item.getParent(); 
+			if (ip instanceof LineIha) {
+	   			
+				if (parent instanceof LineIha) {
+					((LineIha) ip).setLink(parent);
+	  			    ((LineIha) parent).setLink(ip);
+	   			}
+	   			
+	   			if (parent instanceof BlockIha) {
+					((LineIha) ip).setLink(parent);
+	  			    ((BlockIha) parent).setLink(ip);
+	   			}
+			}
+
+			if (ip instanceof BlockIha) {
+				if (parent instanceof LineIha) {
+					((BlockIha) ip).setLink(parent);
+	  			    ((LineIha) parent).setLink(ip);
+	   			}
+			}
+    	  
+    	  
+    	if (!notDraggeble) {
     		if (!item.notDraggeble) {
-     			item.centerXProperty().unbind();
+    			item.centerXProperty().unbind();
 	        	item.centerYProperty().unbind();
 	        	item.centerXProperty().bind(this.centerXProperty());
 				item.centerYProperty().bind(this.centerYProperty());
     		} else {
-	        	this.centerXProperty().bind(item.centerXProperty());
+    			this.centerXProperty().bind(item.centerXProperty());
 	        	this.centerYProperty().bind(item.centerYProperty());
 				this.notDraggeble = true;
 				bp.link.add(this);
@@ -266,12 +323,16 @@ public class ObjectsManipulation extends Application {
 				return;
     		}
  		} else {
-        	item.centerXProperty().bind(this.centerXProperty());
+			item.centerXProperty().bind(this.centerXProperty());
 			item.centerYProperty().bind(this.centerYProperty());
  		}
+	  
+	  
 	  }
 	  
       bp.link.add(this);
+      
+      
       enableDrag();
     }
 
@@ -293,13 +354,10 @@ public class ObjectsManipulation extends Application {
 	}
 	
 	private void enableDrag() {
-      final Delta dragDelta = new Delta();
+
       setOnMousePressed(new EventHandler<MouseEvent>() {
         @Override public void handle(MouseEvent mouseEvent) {
-          // record a delta distance for the drag and drop operation.
-          dragDelta.x = getCenterX() - mouseEvent.getX();
-          dragDelta.y = getCenterY() - mouseEvent.getY();
-          getScene().setCursor(Cursor.MOVE);
+         getScene().setCursor(Cursor.MOVE);
         }
       });
       setOnMouseReleased(new EventHandler<MouseEvent>() {
@@ -309,10 +367,19 @@ public class ObjectsManipulation extends Application {
       });
       setOnMouseDragged(new EventHandler<MouseEvent>() {
 		@Override public void handle(MouseEvent mouseEvent) {
-          double newX = mouseEvent.getX() + dragDelta.x;
-          double newY = mouseEvent.getY() + dragDelta.y;
-          
-          move(newX, newY, self);
+          double newX = mouseEvent.getSceneX();
+          double newY = mouseEvent.getSceneY();
+
+	      PickResult pr = mouseEvent.getPickResult();
+	      Node rn = pr.getIntersectedNode();
+		  
+	      if (rn instanceof Circle) {
+			  Circle circle = (Circle) rn;
+		      newX = circle.getCenterX();
+	          newY = circle.getCenterY();
+		  }
+	      
+	      move(newX, newY, self);
           
           if (!self.centerXProperty().isBound()) {
         	  self.getParent().toFront();
@@ -327,7 +394,6 @@ public class ObjectsManipulation extends Application {
           } else {
         	  if (!self.selected) self.getParent().toBack();
           }
-          
           
 		}
       });
@@ -362,41 +428,48 @@ public class ObjectsManipulation extends Application {
           } //Eraser block Stop
           
           { //Move block Start
+        	  
         	  Pixel bp = pool[(int)newX][(int)newY];
         	  self.oldX = new SimpleDoubleProperty(newX);
         	  self.oldY = new SimpleDoubleProperty(newY);
 	        
         	  if (!notDraggeble) {
 		    	  for ( Anchor item : bp.link) {
-		    	   if  (!self.selected)	
-		    		if (!item.notDraggeble) {
-		    			item.centerXProperty().bind(self.centerXProperty());
-						item.centerYProperty().bind(self.centerYProperty());
-		    	  	} else {
-			  	  		self.notDraggeble = true;
-			  	  	    self.centerXProperty().bind(item.centerXProperty());
-			  	  	    self.centerYProperty().bind(item.centerYProperty());
-			  	  	    bp.link.add(self);
-		    	  		return;
-		    	  	}
-		    	  }
+		    	    if  (!self.selected)	
+			    		if (!item.notDraggeble) {
+			    	    	
+			    			((LineIha) item.getParent()).setLink(self.getParent());
+							((LineIha) self.getParent()).setLink(item.getParent());
+			    			
+							item.centerXProperty().bind(self.centerXProperty());
+							item.centerYProperty().bind(self.centerYProperty());
+			    	  	} else {
+
+			    	  		((BlockIha) item.getParent()).setLink(self.getParent());
+							((LineIha) self.getParent()).setLink(item.getParent());
+				  	  		
+							self.notDraggeble = true;
+				  	  	    self.centerXProperty().bind(item.centerXProperty());
+				  	  	    self.centerYProperty().bind(item.centerYProperty());
+				  	  	    bp.link.add(self);
+			    	  		return;
+			    	  	}
+
+		    	    }
         	  } 
         	  self.selected = false;
  	  		  bp.link.add(self);
           } //Move block Stop    	
     }
     
-    private class Delta { double x, y; }
+    
   }  
 
   class Pixel {
 	  public ArrayList<Anchor> link = new ArrayList<Anchor>();
   }
 
-  private class Delta { double x, y; }
-  
-  private void enableDrag(Scene scene, Group root) {
-	  final Delta dragDelta = new Delta();
+   private void enableDrag(Scene scene, Group root) {
 	  scene.setOnMousePressed(new EventHandler<MouseEvent>() {
 	    @Override public void handle(MouseEvent mouseEvent) {
 	      
@@ -416,8 +489,27 @@ public class ObjectsManipulation extends Application {
 	    		  }
 
 	    		  if (parent != null) {
-	    			  if ((parent instanceof LineIha)) ((LineIha) parent).dispose(); 
-	    			  if ((parent instanceof BlockIha)) ((BlockIha) parent).dispose();
+	    			  
+	    			  if ((parent instanceof LineIha)) {
+	    				  ((LineIha) parent).dispose();
+	    				  
+	    				  for (Object item : ((LineIha) parent).link) {
+	    					  if (item instanceof LineIha) {
+	    						  ((LineIha) item).dispose();
+	    						  root.getChildren().remove(item);
+	    					  }
+						  }
+	    			  }
+	    			  
+	    			  if ((parent instanceof BlockIha)) {
+	    				  ((BlockIha) parent).dispose();
+	    				  for (Object item : ((BlockIha) parent).link) {
+	    					  if (item instanceof LineIha) {
+	    						  ((LineIha) item).dispose();
+	    						  root.getChildren().remove(item);
+	    					  }
+						  }
+	    			  }
 	    			  root.getChildren().remove(parent);
     			  }
 	    	  }
@@ -425,6 +517,15 @@ public class ObjectsManipulation extends Application {
 	      
 	      if (mouseEvent.isPrimaryButtonDown()){
 	    	  if ( rn != null){
+	    		  
+	    		  if (rn instanceof Line){
+	    			  LineIha o = (LineIha) rn.getParent();
+	    			  System.out.println("<-- Object: " + o + " -->");
+	    			  for (Object item : o.link) {
+	    				  System.out.println(item);
+					  }
+	    		  }
+	    		  
 	    		  if (rn instanceof Circle) {
 	    			  
 	    			  Anchor circle = (Anchor) rn;
