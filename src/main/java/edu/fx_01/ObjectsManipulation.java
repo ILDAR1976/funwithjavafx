@@ -170,7 +170,6 @@ public class ObjectsManipulation extends Application {
 	  DoubleProperty startY;
 	  DoubleProperty endX;
 	  DoubleProperty endY;
-	
 	  
 	  public LineIha(int startX, int startY, int endX, int endY, Color color, Pixel[][] pool){
 			
@@ -181,13 +180,24 @@ public class ObjectsManipulation extends Application {
 		  
 			
 			this.start  = new Anchor(color, this.startX, this.startY, pool, false);
-			this.start.setParentAnchor(this);
 			this.end    = new Anchor(color, this.endX, this.endY, pool, false);
+
+			this.start.setParentAnchor(this);
 			this.end.setParentAnchor(this);
 			
 			this.line   = new BoundLine(color, this.startX, this.startY, this.endX, this.endY);
 	  
 			getChildren().addAll(line, start, end);
+	  }
+	  
+	  public LineIha(int startX, int startY, Color color, Pixel[][] pool){
+		  this(startX, startY, startX, startY, color, pool);
+		  this.end.notDraggeble = false;
+		  this.end.selected = true;
+		  this.start.toBack();
+		  this.end.toFront();
+		  this.end.centerXProperty().unbind();
+		  this.end.centerYProperty().unbind();
 	  }
 	  
 	  public void dispose(){
@@ -247,13 +257,10 @@ public class ObjectsManipulation extends Application {
 	        	item.centerYProperty().unbind();
 	        	item.centerXProperty().bind(this.centerXProperty());
 				item.centerYProperty().bind(this.centerYProperty());
-				item.toBack();
     		} else {
 	        	this.centerXProperty().bind(item.centerXProperty());
 	        	this.centerYProperty().bind(item.centerYProperty());
 				this.notDraggeble = true;
-				this.toBack();
-				item.toFront();
 				bp.link.add(this);
 				enableDrag();
 				return;
@@ -264,11 +271,9 @@ public class ObjectsManipulation extends Application {
  		}
 	  }
 	  
-	  this.toFront();
       bp.link.add(this);
       enableDrag();
     }
-
 
 	protected void dispose(){
 		Pixel bp = pool[(int)self.centerXProperty().get()][(int)self.centerXProperty().get()];
@@ -313,14 +318,14 @@ public class ObjectsManipulation extends Application {
         	  self.getParent().toFront();
         	  self.setCenterX(newX);
           } else {
-        	  self.getParent().toBack();
+        	  if (!self.selected) self.getParent().toBack();
           }
           
           if (!self.centerYProperty().isBound()) {
         	  self.getParent().toFront();
         	  self.setCenterY(newY);
           } else {
-        	  self.getParent().toBack();
+        	  if (!self.selected) self.getParent().toBack();
           }
           
           
@@ -363,6 +368,7 @@ public class ObjectsManipulation extends Application {
 	        
         	  if (!notDraggeble) {
 		    	  for ( Anchor item : bp.link) {
+		    	   if  (!self.selected)	
 		    		if (!item.notDraggeble) {
 		    			item.centerXProperty().bind(self.centerXProperty());
 						item.centerYProperty().bind(self.centerYProperty());
@@ -375,6 +381,7 @@ public class ObjectsManipulation extends Application {
 		    	  	}
 		    	  }
         	  } 
+        	  self.selected = false;
  	  		  bp.link.add(self);
           } //Move block Stop    	
     }
@@ -427,9 +434,10 @@ public class ObjectsManipulation extends Application {
 	    			  
 	    			  Pixel bp = pool[x][y];
 	    			  
-	    			  if (!bp.link.isEmpty() && circle.getDraggeble()) {
+	    			  if (!bp.link.isEmpty() && circle.getDraggeble() && !circle.selected) {
 		    			  
-	    				  Group gr = new LineIha(x, y, x + 10, y + 10, Color.RED, pool);
+	    				  //Group gr = new LineIha(x, y, x + 1, y, Color.RED, pool);
+	    				  Group gr = new LineIha(x, y, Color.RED, pool);
 		    			  
 		    			  root.getChildren().add(gr);
 	    			  }
