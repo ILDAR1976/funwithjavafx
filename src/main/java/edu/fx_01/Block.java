@@ -17,6 +17,7 @@ public class Block extends AnchorPane {
 	private DoubleProperty x;
 	private DoubleProperty y;
     private ArrayList<Anchor> groupList = null;
+    private Block self = this;
     private Pixel[][] pool = null;
     
 	public Block(int x, int y, Pixel[][] pool) {
@@ -74,7 +75,8 @@ public class Block extends AnchorPane {
 			@Override public void handle(MouseEvent mouseEvent) {
 	  	  
 			  	  relocateBlock((int) mouseEvent.getSceneX(), (int) mouseEvent.getSceneY());
-			  	  moveGroup();
+			  	  
+			  	  moveGroup(self.pool);
 			}
 	      });
 	      setOnMouseEntered(new EventHandler<MouseEvent>() {
@@ -97,10 +99,27 @@ public class Block extends AnchorPane {
 		this.groupList = groupList;
 	}
 	
-	private void moveGroup(){
+	private void moveGroup(Pixel[][] pool){
+		int count = 0;
+	
 		for (Anchor item : groupList) {
-			item.move((int) item.centerXProperty().get(), (int) item.centerYProperty().get(), item);
+			count++;
+			
+			//System.out.println("bp= " + count + ") " + pool[item.x][item.y].link);
+			//System.out.println("item (new x= " + item.x + " old x= " + item.oldX.get() + ") (new y= " + item.y + " old y= " + item.oldY.get() + ")" );
+			
+			item.move(item, pool);
+			//System.out.println("bp= " + count + ") " + pool[0][0].staff);
+			
+			
 		}
+	
+		/*
+		System.out.println("bp= " + 23 + ") " + pool[10][10].link);
+		System.out.println("x= " + 10 + " y= " + 10 );
+
+		System.out.println("-----");
+		*/
 	}
 	
 	
