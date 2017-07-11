@@ -33,7 +33,9 @@ public class ObjectsManipulation extends Application {
   private boolean controlDown = false;
   
   public static void main(String[] args) throws Exception { launch(args); }
-  @Override public void start(final Stage stage) throws Exception {
+  
+  @Override 
+  public void start(final Stage stage) throws Exception {
 	pool = new Pixel[WindowX + 300][WindowY + 300];
 	for (int i = 0; i < WindowX + 300; i++) {
 		for (int j = 0; j < WindowY + 300; j++) {
@@ -113,7 +115,8 @@ public class ObjectsManipulation extends Application {
 					                    new SimpleDoubleProperty(startY + i + 1), 
 					                    pool, 
 					                    true,
-					                    this));
+					                    this,
+					                    false));
 			 
 			 if (i < 7) {
 				 bind.property.add(new SimpleDoubleProperty(0));
@@ -201,8 +204,8 @@ public class ObjectsManipulation extends Application {
 			this.endY   =  new SimpleDoubleProperty(endY);
 		  
 			
-			this.start  = new Anchor(color, this.startX, this.startY, pool, false, this);
-			this.end    = new Anchor(color, this.endX, this.endY, pool, false, this);
+			this.start  = new Anchor(color, this.startX, this.startY, pool, false, this, false);
+			this.end    = new Anchor(color, this.endX, this.endY, pool, false, this, false);
 
 			this.start.setParentAnchor(this);
 			this.end.setParentAnchor(this);
@@ -213,13 +216,25 @@ public class ObjectsManipulation extends Application {
 	  }
 	  
 	  public LineIha(int startX, int startY, Color color, Pixel[][] pool){
-		  this(startX, startY, startX, startY, color, pool);
-		  this.end.notDraggeble = false;
-		  this.end.setSelected(startX, startY);
-		  this.start.toBack();
-		  this.end.toFront();
-		  this.end.centerXProperty().unbind();
-		  this.end.centerYProperty().unbind();
+		    this.startX =  new SimpleDoubleProperty(startX);
+			this.startY =  new SimpleDoubleProperty(startY);
+			this.endX   =  new SimpleDoubleProperty(startX);
+			this.endY   =  new SimpleDoubleProperty(startY);
+			
+			this.start  = new Anchor(color, this.startX, this.startY, pool, false, this, false);
+			this.end    = new Anchor(color, this.endX, this.endY, pool, false, this, true);
+			
+			this.start.setParentAnchor(this);
+			this.start.toBack();
+			
+			this.end.notDraggeble = false;
+			this.end.toFront();
+			this.end.setParentAnchor(this);
+			this.end.setSelected(startX, startY);
+			
+			this.line = new BoundLine(color, this.startX, this.startY, this.endX, this.endY);
+	  
+			getChildren().addAll(line, start, end);
 	  }
 	  
 	  public void dispose(){
@@ -263,9 +278,8 @@ public class ObjectsManipulation extends Application {
     private int selectY = 0;
     private Object parent = null;
 	private String id;
-    private boolean controlDown = false;
     
-	public Anchor(Color color, DoubleProperty x, DoubleProperty y, Pixel[][] pool, boolean notDraggeble, Node parent) {
+	public Anchor(Color color, DoubleProperty x, DoubleProperty y, Pixel[][] pool, boolean notDraggeble, Node parent, boolean selected) {
       super(x.get(), y.get(), 1);
       id = UUID.randomUUID().toString();
       setFill(color.deriveColor(1, 1, 1, 0.5));
@@ -288,84 +302,73 @@ public class ObjectsManipulation extends Application {
     	  this.centerYProperty().unbind();
       }
 	  
-      //here
+      
       int count = 0;
       
       if (bp.link.size() > 0 ) System.out.println("    L I N K S   C R E A T E   ");
       
       for (Anchor item : bp.link) {
-  	        
     	  
-    	    count++;
+	    count++;
 
-    	    System.out.println("OOPS!!! " + count);
-    	    
-    	    Node ip = item.getParent(); 
-			
-    	    if (ip instanceof LineIha) {
-	   			
-				if (parent instanceof LineIha) {
-					((LineIha) ip).setLink(parent);
-	  			    ((LineIha) parent).setLink(ip);
-	  			    
-	  			    System.out.println(" - LINK A");
-	   			}
-	   			
-	   			if (parent instanceof BlockIha) {
-					((LineIha) ip).setLink(parent);
-	  			    ((BlockIha) parent).setLink(ip);
-	  			    
-	  			    System.out.println(" - LINK B");
-	   			}
-			}
+	    System.out.println("OOPS!!! " + count);
+	    
+	    Node ip = item.getParent(); 
+		
+	    if (ip instanceof LineIha) {
+   			
+			if (parent instanceof LineIha) {
+				((LineIha) ip).setLink(parent);
+  			    ((LineIha) parent).setLink(ip);
+  			    
+  			    System.out.println(" - LINK A");
+   			}
+   			
+   			if (parent instanceof BlockIha) {
+				((LineIha) ip).setLink(parent);
+  			    ((BlockIha) parent).setLink(ip);
+  			    
+  			    System.out.println(" - LINK B");
+   			}
+		}
 
-			if (ip instanceof BlockIha) {
-				if (parent instanceof LineIha) {
-					((BlockIha) ip).setLink(parent);
-	  			    ((LineIha) parent).setLink(ip);
-	  			    
-	  			    System.out.println(" - LINK C"); 
-	   			}
-				
-				if (parent instanceof BlockIha) {
-					((LineIha) ip).setLink(parent);
-	  			    ((BlockIha) parent).setLink(ip);
-	  			    
-	  			    System.out.println(" - LINK D");
-	   			}
-			}
-    	  
-    	  
-    	if (!notDraggeble) {
-    		if (!item.notDraggeble) {
-    			item.centerXProperty().unbind();
-	        	item.centerYProperty().unbind();
-	        	item.centerXProperty().bind(this.centerXProperty());
+		if (ip instanceof BlockIha) {
+			if (parent instanceof LineIha) {
+				((BlockIha) ip).setLink(parent);
+  			    ((LineIha) parent).setLink(ip);
+  			    
+  			    System.out.println(" - LINK C"); 
+   			}
+		}
+		
+		if (!selected) {			
+	    	if (!notDraggeble) {
+	    		if (!item.notDraggeble) {
+	    			item.centerXProperty().unbind();
+		        	item.centerYProperty().unbind();
+		        	
+		        	item.centerXProperty().bind(this.centerXProperty());
+					item.centerYProperty().bind(this.centerYProperty());
+					
+					System.out.println("A");
+	    		} else {
+	    			if (count == 1) {
+	    			this.centerXProperty().bind(item.centerXProperty());
+		        	this.centerYProperty().bind(item.centerYProperty());
+					this.notDraggeble = true;
+	    			}
+	    			
+	    			System.out.println("B");
+	    		}
+	 		} else {
+	 			
+				item.centerXProperty().bind(this.centerXProperty());
 				item.centerYProperty().bind(this.centerYProperty());
 				
-				System.out.println("A");
-    		} else {
-    			if (count == 1) {
-    			this.centerXProperty().bind(item.centerXProperty());
-	        	this.centerYProperty().bind(item.centerYProperty());
-				this.notDraggeble = true;
-    			}
-				//bp.link.add(this);
-				//enableDrag();
-				//return;
-    			
-    			System.out.println("B");
-    		}
- 		} else {
- 			
-			item.centerXProperty().bind(this.centerXProperty());
-			item.centerYProperty().bind(this.centerYProperty());
-			
-			System.out.println("C");
- 		}
-	  
-	  
-	  }
+				System.out.println("C");
+	 		}
+    	}  
+	 }
       
       if (parent != null) {
     	  
@@ -376,7 +379,7 @@ public class ObjectsManipulation extends Application {
       
       enableDrag();
     }
-
+	
 	protected void dispose(Pixel[][] pool){
 		Pixel bp = pool[(int) self.centerXProperty().get()][(int) self.centerYProperty().get()];
 		System.out.println("-----------------------------------------------------------------------------------------");
@@ -400,7 +403,6 @@ public class ObjectsManipulation extends Application {
 	}
 	
 	private void setSelected(int x, int y){
-		this.selected = true;
 		this.selectX = x;
 		this.selectY = y;
 	}
@@ -503,7 +505,6 @@ public class ObjectsManipulation extends Application {
         		  
         		  if (!self.selected) { 
         			link = (ArrayList<Anchor>) bps.link.clone();
-        		  	link.remove(self);
         		  	bps.link.clear();
         		  } else {
         			link.clear();  
@@ -532,54 +533,54 @@ public class ObjectsManipulation extends Application {
 		    		  if  (!self.selected)	{
 		    			  
 			      	    Node ip = item.getParent(); 
-						
-			    	    if (ip instanceof LineIha) {
-				   			
-							if (self.getParent() instanceof LineIha) {
-								((LineIha) ip).setLink(self.getParent());
-				  			    ((LineIha) self.getParent()).setLink(ip);
-				   			}
-				   			
-				   			if (self.getParent() instanceof BlockIha) {
-								((LineIha) ip).setLink(self.getParent());
-				  			    ((BlockIha) self.getParent()).setLink(ip);
-				   			}
-						}
-	
-						if (ip instanceof BlockIha) {
-							
-							if (self.getParent() instanceof LineIha) {
-								((BlockIha) ip).setLink(self.getParent());
-				  			    ((LineIha) parent).setLink(ip);
-				   			}
-							
-							if (self.getParent() instanceof BlockIha) {
-								((LineIha) ip).setLink(self.getParent());
-				  			    ((BlockIha) self.getParent()).setLink(ip);
-				   			}
-							
-						}
-		    		  
-		    		  
+			      	    
+			      	    for (Anchor iSelf: link) {
+			      	    
+					    	    if (ip instanceof LineIha) {
+						   			
+									if (iSelf.getParent() instanceof LineIha) {
+										((LineIha) ip).setLink(iSelf.getParent());
+						  			    ((LineIha) iSelf.getParent()).setLink(ip);
+									}
+						   			
+						   			if (iSelf.getParent() instanceof BlockIha) {
+										((LineIha) ip).setLink(iSelf.getParent());
+						  			    ((BlockIha) iSelf.getParent()).setLink(ip);
+						   			}
+								}
+			
+								if (ip instanceof BlockIha) {
+									
+									if (iSelf.getParent() instanceof LineIha) {
+										((BlockIha) ip).setLink(iSelf.getParent());
+						  			    ((LineIha) iSelf.getParent()).setLink(ip);
+						   			}
+									
+								}
+		    		    }
+
+			      	    
+			      	    
 			    		if (!item.notDraggeble) {
-			    			
+			    			System.out.println("    L I N K   M O V E    ");
 							item.centerXProperty().bind(self.centerXProperty());
 							item.centerYProperty().bind(self.centerYProperty());
 
 			    	  	
 			    		} else {
 			    			
-			    			System.out.println("    L I N K S   M O V E   ");
+			    			System.out.println("    NOT DRAGGEBLE    ");
 			    			item.printLink(item.getParent());
+			    			
 			    			if (count == 1) {
 
 			    				self.notDraggeble = true;
 					  	  	    self.centerXProperty().bind(item.centerXProperty());
 					  	  	    self.centerYProperty().bind(item.centerYProperty());
-					  	  	    
+					  	  	    item.getParent().toFront();
 			    			}
 			    			
-				  	  	    item.getParent().toFront();
+				  	  	    
 			    			
 			    	  	}
 		    	    }
@@ -592,7 +593,7 @@ public class ObjectsManipulation extends Application {
 	        	  self.removeSelected(); 
 	          }
 	        	  
-	          
+	          link.remove(self);
  	  		  if (!link.isEmpty()) bp.link.addAll(link);
         	  bp.link.add(self);
    
@@ -635,7 +636,6 @@ public class ObjectsManipulation extends Application {
 	  public ArrayList<Anchor> link = new ArrayList<Anchor>();
 	  public int staff;
   }
-
   
   private void enableDrag(Scene scene, Group root) {
 	  scene.setOnMousePressed(new EventHandler<MouseEvent>() {
@@ -779,7 +779,6 @@ public class ObjectsManipulation extends Application {
 			controlDown = keyEvent.isControlDown(); 
 		}
  	});
-      
       scene.setOnKeyReleased(new EventHandler<KeyEvent>(){
 		@Override public void handle(KeyEvent keyEvent) {
 			controlDown = false; 
