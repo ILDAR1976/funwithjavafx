@@ -8,21 +8,29 @@ import java.util.UUID;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
-import javafx.scene.*;
+import javafx.scene.Cursor;
+import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.PickResult;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.*;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.StrokeType;
 import javafx.stage.Stage;
 
 public class ObjectsManipulation extends Application {
   public final int WindowX = 600;
   public final int WindowY = 600;
   public Pixel[][] pool = null;
+  private boolean controlDown = false;
   
   public static void main(String[] args) throws Exception { launch(args); }
   @Override public void start(final Stage stage) throws Exception {
@@ -140,12 +148,6 @@ public class ObjectsManipulation extends Application {
 		 
 			 groupList.add(bind.anchor.get(i)); 
 			 
-			 /*
-			 bind.anchor.get(i).move((int) bind.anchor.get(i).centerXProperty().get(), 
-					                 (int) bind.anchor.get(i).centerYProperty().get(), 
-					                 bind.anchor.get(i),
-					                 pool);
-			*/		                 
 			 bind.anchor.get(i).move(bind.anchor.get(i), pool);
 		 }
 		 
@@ -224,7 +226,7 @@ public class ObjectsManipulation extends Application {
 	  public LineIha(int startX, int startY, Color color, Pixel[][] pool){
 		  this(startX, startY, startX, startY, color, pool);
 		  this.end.notDraggeble = false;
-		  this.end.selected = true;
+		  this.end.setSelected(startX, startY);
 		  this.start.toBack();
 		  this.end.toFront();
 		  this.end.centerXProperty().unbind();
@@ -265,15 +267,16 @@ public class ObjectsManipulation extends Application {
   class Anchor extends Circle { 
 	public DoubleProperty oldX = new SimpleDoubleProperty(0);
 	public DoubleProperty oldY = new SimpleDoubleProperty(0);
-	public int x = 0;
-	public int y = 0;
     private Anchor self = this;
     private boolean notDraggeble = false;
     private boolean selected = false;
+    private int selectX = 0;
+    private int selectY = 0;
     private Object parent = null;
 	private String id;
+    private boolean controlDown = false;
     
-	Anchor(Color color, DoubleProperty x, DoubleProperty y, Pixel[][] pool, boolean notDraggeble, Node parent) {
+	public Anchor(Color color, DoubleProperty x, DoubleProperty y, Pixel[][] pool, boolean notDraggeble, Node parent) {
       super(x.get(), y.get(), 1);
       id = UUID.randomUUID().toString();
       setFill(color.deriveColor(1, 1, 1, 0.5));
@@ -289,9 +292,6 @@ public class ObjectsManipulation extends Application {
       oldX = new SimpleDoubleProperty(x.get());
       oldY = new SimpleDoubleProperty(y.get());
        
-      this.x = (int) oldX.get();
-      this.y = (int) oldY.get();
-      
       Pixel bp = pool[(int)x.get()][(int)y.get()];
    	  
       if (!notDraggeble) {
@@ -299,19 +299,34 @@ public class ObjectsManipulation extends Application {
     	  this.centerYProperty().unbind();
       }
 	  
+      //here
+      int count = 0;
+      
+      if (bp.link.size() > 0 ) System.out.println("    L I N K S   C R E A T E   ");
+      
       for (Anchor item : bp.link) {
-  	        Node ip = item.getParent(); 
+  	        
+    	  
+    	    count++;
+
+    	    System.out.println("OOPS!!! " + count);
+    	    
+    	    Node ip = item.getParent(); 
 			
     	    if (ip instanceof LineIha) {
 	   			
 				if (parent instanceof LineIha) {
 					((LineIha) ip).setLink(parent);
 	  			    ((LineIha) parent).setLink(ip);
+	  			    
+	  			    System.out.println(" - LINK A");
 	   			}
 	   			
 	   			if (parent instanceof BlockIha) {
 					((LineIha) ip).setLink(parent);
 	  			    ((BlockIha) parent).setLink(ip);
+	  			    
+	  			    System.out.println(" - LINK B");
 	   			}
 			}
 
@@ -319,6 +334,15 @@ public class ObjectsManipulation extends Application {
 				if (parent instanceof LineIha) {
 					((BlockIha) ip).setLink(parent);
 	  			    ((LineIha) parent).setLink(ip);
+	  			    
+	  			    System.out.println(" - LINK C"); 
+	   			}
+				
+				if (parent instanceof BlockIha) {
+					((LineIha) ip).setLink(parent);
+	  			    ((BlockIha) parent).setLink(ip);
+	  			    
+	  			    System.out.println(" - LINK D");
 	   			}
 			}
     	  
@@ -329,22 +353,36 @@ public class ObjectsManipulation extends Application {
 	        	item.centerYProperty().unbind();
 	        	item.centerXProperty().bind(this.centerXProperty());
 				item.centerYProperty().bind(this.centerYProperty());
+				
+				System.out.println("A");
     		} else {
+    			if (count == 1) {
     			this.centerXProperty().bind(item.centerXProperty());
 	        	this.centerYProperty().bind(item.centerYProperty());
 				this.notDraggeble = true;
-				bp.link.add(this);
-				enableDrag();
-				return;
+    			}
+				//bp.link.add(this);
+				//enableDrag();
+				//return;
+    			
+    			System.out.println("B");
     		}
  		} else {
+ 			
 			item.centerXProperty().bind(this.centerXProperty());
 			item.centerYProperty().bind(this.centerYProperty());
+			
+			System.out.println("C");
  		}
 	  
 	  
 	  }
-	  
+      
+      if (parent != null) {
+    	  
+    	  printLink(parent);
+      }
+      
       bp.link.add(this);
       
       enableDrag();
@@ -361,7 +399,6 @@ public class ObjectsManipulation extends Application {
 		bp.link.remove(self);
 
 		System.out.println("|  new bp.size= " + bp.link.size());
-		
 		System.out.println("-----------------------------------------------------------------------------------------");
    }
 	
@@ -373,8 +410,24 @@ public class ObjectsManipulation extends Application {
 		this.parent = parent;
 	}
 	
-	private Object getParentAnchor(){
-		return this.parent;
+	private void setSelected(int x, int y){
+		this.selected = true;
+		this.selectX = x;
+		this.selectY = y;
+	}
+	
+	private int getSelectX() {
+		return this.selectX;
+	}
+
+	private int getSelectY() {
+		return this.selectY;
+	}
+	
+	private void removeSelected(){
+		this.selected = false;
+		this.selectX = 0;
+		this.selectY = 0;
 	}
 	
 	private void enableDrag() {
@@ -440,9 +493,10 @@ public class ObjectsManipulation extends Application {
           }
         }
       });
-    }
+	}
  	
- 	public void move( Anchor self, Pixel[][] pool){
+ 	@SuppressWarnings("unchecked")
+	public void move( Anchor self, Pixel[][] pool){
     	int newX = (int) self.centerXProperty().get();
     	int newY = (int) self.centerYProperty().get();
  		
@@ -461,10 +515,13 @@ public class ObjectsManipulation extends Application {
         		  if (!self.selected) { 
         			link = (ArrayList<Anchor>) bps.link.clone();
         		  	link.remove(self);
-        		  	//System.out.println("Remove x= " + oldX + " y= " + oldY);
+        		  	bps.link.clear();
+        		  } else {
+        			link.clear();  
+        			bps.link.remove(self);  
         		  }
         		  
-        		  bps.link.clear();
+        		 
         	  }
 	        	  
         } //Eraser block Stop
@@ -475,9 +532,6 @@ public class ObjectsManipulation extends Application {
         	  self.oldX = new SimpleDoubleProperty(newX);
         	  self.oldY = new SimpleDoubleProperty(newY);
 	          
-        	  self.x = (int) self.centerXProperty().get();
-	          self.y = (int) self.centerYProperty().get();
-	          
 	          //System.out.println("!" + self.getAnchorId().substring(34));
         	  
 	          if (!notDraggeble) {
@@ -485,7 +539,6 @@ public class ObjectsManipulation extends Application {
 		    	  for ( Anchor item : bp.link) {
 		    		  
 		    		  count++;
-		    		  //System.out.println(count + ") " + item);
 		    		  
 		    		  if  (!self.selected)	{
 		    			  
@@ -494,26 +547,26 @@ public class ObjectsManipulation extends Application {
 			    	    if (ip instanceof LineIha) {
 				   			
 							if (self.getParent() instanceof LineIha) {
-								((LineIha) ip).setLink(parent);
+								((LineIha) ip).setLink(self.getParent());
 				  			    ((LineIha) self.getParent()).setLink(ip);
 				   			}
 				   			
 				   			if (self.getParent() instanceof BlockIha) {
-								((LineIha) ip).setLink(parent);
+								((LineIha) ip).setLink(self.getParent());
 				  			    ((BlockIha) self.getParent()).setLink(ip);
 				   			}
 						}
 	
 						if (ip instanceof BlockIha) {
 							
-							if (parent instanceof LineIha) {
-								((BlockIha) ip).setLink(parent);
+							if (self.getParent() instanceof LineIha) {
+								((BlockIha) ip).setLink(self.getParent());
 				  			    ((LineIha) parent).setLink(ip);
 				   			}
 							
-							if (parent instanceof BlockIha) {
-								((LineIha) ip).setLink(parent);
-				  			    ((BlockIha) parent).setLink(ip);
+							if (self.getParent() instanceof BlockIha) {
+								((LineIha) ip).setLink(self.getParent());
+				  			    ((BlockIha) self.getParent()).setLink(ip);
 				   			}
 							
 						}
@@ -527,14 +580,15 @@ public class ObjectsManipulation extends Application {
 			    	  	
 			    		} else {
 			    			
-			    			//if (count == 1) {
+			    			System.out.println("    L I N K S   M O V E   ");
+			    			item.printLink(item.getParent());
+			    			if (count == 1) {
 
 			    				self.notDraggeble = true;
 					  	  	    self.centerXProperty().bind(item.centerXProperty());
 					  	  	    self.centerYProperty().bind(item.centerYProperty());
-
 					  	  	    
-			    			//}
+			    			}
 			    			
 				  	  	    item.getParent().toFront();
 			    			
@@ -543,7 +597,13 @@ public class ObjectsManipulation extends Application {
 		    	  }
         	  } 
         	  
-        	  self.selected = false;
+	          if ((newX == getSelectX()) && (newY == getSelectY())) {
+	        	  self.setSelected(newX, newY);
+	          } else {
+	        	  self.removeSelected(); 
+	          }
+	        	  
+	          
  	  		  if (!link.isEmpty()) bp.link.addAll(link);
         	  bp.link.add(self);
    
@@ -553,6 +613,33 @@ public class ObjectsManipulation extends Application {
     public String getAnchorId(){
     	return id;
     }
+  
+    public void printLink(Object main){
+		
+		int count = 0;
+    	
+		Set<Object> item = null;
+		
+		if (main instanceof BlockIha) {
+			item = ((BlockIha) main).getLink();
+			if (item.size() == 0) return; 
+		} if (main instanceof LineIha) {
+			item = ((LineIha) main).getLink();
+			if (item.size() == 0) return;
+    	} else return;
+		
+		System.out.println("-LINKS-START-FOR---" +  main.toString().substring(20, main.toString().length()).split("@")[0] 
+                + ":" + main.toString().substring(20, main.toString().length()).split("@")[1].substring(3) + "--------");
+		
+		
+		for (Object obj : item) {
+			count++;
+    		System.out.println("| " + count + ") " + obj.toString().substring(20, obj.toString().length()).split("@")[0] 
+    				                + ":" + obj.toString().substring(20, obj.toString().length()).split("@")[1].substring(3));
+    	}
+		
+		System.out.println("-LINKS-END-------------------------------------------------------------------");
+    }
   }  
 
   class Pixel {
@@ -560,7 +647,8 @@ public class ObjectsManipulation extends Application {
 	  public int staff;
   }
 
-   private void enableDrag(Scene scene, Group root) {
+  
+  private void enableDrag(Scene scene, Group root) {
 	  scene.setOnMousePressed(new EventHandler<MouseEvent>() {
 	    @Override public void handle(MouseEvent mouseEvent) {
 	      
@@ -662,11 +750,26 @@ public class ObjectsManipulation extends Application {
 	    			  
 	    			  Pixel bp = pool[x][y];
 	    			  
-	    			  if (!bp.link.isEmpty() && circle.getDraggeble() && !circle.selected) {
-	    				  
-	    				  Group gr = new LineIha(x, y, Color.RED, pool);
+	    			  if (!controlDown) { 
+
+	    				  System.out.println("  <<<<<<<<<<<<<<<<<<< CONTAIN POINTS >>>>>>>>>>>>>>>>>>>>>");
+		    			  for (Anchor item : bp.link) {
+							System.out.println(item);
+						  }
+		    			  System.out.println("  <<<<<<<<<<<<<<<<<<<<<<< E N D >>>>>>>>>>>>>>>>>>>>>");
+	    			  
+	    			  } else {
 		    			  
-		    			  root.getChildren().add(gr);
+	    				  if (!bp.link.isEmpty() && circle.getDraggeble() && !circle.selected) {
+		    				  
+		    				  System.out.println("  <<<<<<<<<<<<<<<<<<< CREATE LINKER >>>>>>>>>>>>>>>>>>>>>");
+		    				  
+		    				  
+		    				  Group gr = new LineIha(x, y, Color.RED, pool);
+			    			  
+			    			  root.getChildren().add(gr);
+		    			  }
+	    			  
 	    			  }
 	    		  }
 	    		  
@@ -682,6 +785,17 @@ public class ObjectsManipulation extends Application {
             }
           }
         });
+      scene.setOnKeyPressed(new EventHandler<KeyEvent>(){
+		@Override public void handle(KeyEvent keyEvent) {
+			controlDown = keyEvent.isControlDown(); 
+		}
+ 	});
+      
+      scene.setOnKeyReleased(new EventHandler<KeyEvent>(){
+		@Override public void handle(KeyEvent keyEvent) {
+			controlDown = false; 
+		}
+ 	});
 
    }
 
