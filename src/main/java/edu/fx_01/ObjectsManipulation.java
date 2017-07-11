@@ -45,17 +45,6 @@ public class ObjectsManipulation extends Application {
     
     Group root = new Group();
 
-    /*
-    root.getChildren().addAll(
-    		new LineIha(10,35,300,335,Color.BLUE, pool),
-     		new BlockIha(50,400, pool),
-     		new BlockIha(450,100, pool),
-       		new LineIha(10,10,590,10,Color.RED, pool),
-    		new LineIha(10,35,590,35,Color.BLUE, pool),
-    		new LineIha(10,60,590,60,Color.GREEN, pool),
-    		new LineIha(10,10,590,310,Color.RED, pool)
-      );
-	*/
     
     root.getChildren().addAll(
     		new BlockIha(50,100, pool),
