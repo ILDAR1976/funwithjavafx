@@ -3,6 +3,7 @@ package edu.fx_01.model;
 import java.util.List;
 
 import edu.fx_01.model.ObjectsManipulation.Anchor;
+import edu.fx_01.model.ObjectsManipulation.BlockIha;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -36,23 +37,41 @@ public class Utils {
 	static void linkAnchor(Anchor self, Object point) {
 		Anchor jobPoint = (Anchor) point;
 		if (jobPoint != self) {
-
-			jobPoint.centerXProperty().bind(self.centerXProperty());
-			jobPoint.centerYProperty().bind(self.centerYProperty());
-
-			jobPoint.getParent().toBack();
-			self.getParent().toFront();
-
-			jobPoint.linkAnchor.addAll(self.linkAnchor);
-			jobPoint.linkAnchor.add(self);
-
+			
 			self.linkAnchor.add(jobPoint);
 			self.linkAnchor.addAll(jobPoint.linkAnchor);
 
+			Anchor main = null;
+			
 			for (Anchor item : self.linkAnchor) {
 				if (item != self){
 					item.linkAnchor.addAll(self.linkAnchor);
 				}
+				
+				if (item.getParent() instanceof BlockIha) { 
+					main = item;
+				}
+			}
+			
+			if (main != null && !(self.getParent() instanceof BlockIha)) {
+				
+				self.centerXProperty().bind(main.centerXProperty());
+				self.centerYProperty().bind(main.centerYProperty());
+				
+				self.getParent().toBack();
+				main.getParent().toFront();
+				
+			} else {
+
+				jobPoint.centerXProperty().bind(self.centerXProperty());
+				jobPoint.centerYProperty().bind(self.centerYProperty());
+
+				jobPoint.getParent().toBack();
+				self.getParent().toFront();
+
+				jobPoint.linkAnchor.addAll(self.linkAnchor);
+				jobPoint.linkAnchor.add(self);
+			
 			}
 		}
 	}

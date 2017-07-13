@@ -6,7 +6,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import edu.fx_01.view.ControllerBlock;
 import javafx.application.Application;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -41,6 +44,7 @@ public class ObjectsManipulation extends Application {
 		Group root = new Group();
 
 		root.getChildren().addAll(
+				new BlockIha(50,400),
 				new LineIha(10, 10, 590, 10, Color.RED), 
 				new LineIha(10, 35, 590, 35, Color.BLUE),
 				new LineIha(10, 60, 590, 60, Color.GREEN), 
@@ -48,7 +52,13 @@ public class ObjectsManipulation extends Application {
 				new LineIha(300, 400, 530, 250, Color.CHOCOLATE), 
 				new LineIha(150, 420, 450, 120, Color.BROWN),
 				new LineIha(150, 120, 450, 420, Color.BLACK));
-
+		
+		/*
+		root.getChildren().addAll(
+				new BlockIha(50,400),
+				new LineIha(150, 420, 450, 120, Color.BROWN));
+		*/
+		
 		Scene scene = new Scene(root, 600, 600, Color.ALICEBLUE);
 
 		scene.widthProperty().addListener(new ChangeListener<Number>() {
@@ -84,6 +94,12 @@ public class ObjectsManipulation extends Application {
 			if (item instanceof LineIha) {
 				anchorList.add(((LineIha) item).getStart());
 				anchorList.add(((LineIha) item).getEnd());
+			}
+
+			if (item instanceof BlockIha) {
+				for (Anchor anchor : ((BlockIha) item).getGroupList()) {
+					anchorList.add(anchor);
+				}
 			}
 		}
 
@@ -233,8 +249,88 @@ public class ObjectsManipulation extends Application {
 		public ArrayList<Anchor> list = new ArrayList<Anchor>();
 	}
 
-	class BlockIha extends Group{
+	public class BlockIha extends Group{
+		DoubleProperty startX;
+		DoubleProperty startY;
+		ControllerBlock main;
+		ArrayList<Bind> binder = new ArrayList<Bind>();
+		ArrayList<Anchor> groupList = new ArrayList<Anchor>();
+		Set<Object> link = new HashSet<Object>();
+
+		public BlockIha(int startX, int startY) {
+
+			this.startX = new SimpleDoubleProperty(startX);
+			this.startY = new SimpleDoubleProperty(startY);
+
+			this.main = new ControllerBlock(startX, startY);
+			this.main.toBack();
+
+			Bind bind = new Bind();
+
+			int count = 22;
+			int Height = 150;
+			int Width = 100;
+
+			for (int i = 0; i < count; i++) {
+
+				bind.anchor.add(new Anchor( Color.GRAY, 
+											new SimpleDoubleProperty(startX - i - 1),
+											new SimpleDoubleProperty(startY + i + 1),
+											false ));
+
+				if (i < 7) {
+					bind.property.add(new SimpleDoubleProperty(0));
+					bind.property.add(new SimpleDoubleProperty((i + 1) * 20));
+				} else if ((i > 6) && (i < 11)) {
+					bind.property.add(new SimpleDoubleProperty((i - 6) * 20));
+					bind.property.add(new SimpleDoubleProperty(Height));
+				} else if ((i > 10) && (i < 18)) {
+					bind.property.add(new SimpleDoubleProperty(Width));
+					bind.property.add(new SimpleDoubleProperty((i - 10) * 20));
+				} else if ((i > 17) && (i < 23)) {
+					bind.property.add(new SimpleDoubleProperty((i - 17) * 20));
+					bind.property.add(new SimpleDoubleProperty(0));
+				}
+
+				bind.summa.add(Bindings.add(bind.property.get(i * 2), this.main.layoutXProperty()));
+				bind.summa.add(Bindings.add(bind.property.get((i * 2) + 1), this.main.layoutYProperty()));
+
+				bind.anchor.get(i).centerXProperty().bind(bind.summa.get((i * 2)));
+				bind.anchor.get(i).centerYProperty().bind(bind.summa.get((i * 2) + 1));
+
+				groupList.add(bind.anchor.get(i));
+
+				bind.anchor.get(i).getLinkAnchor().add(bind.anchor.get(i));
+				
+			}
+
+			this.main.setGroup(groupList);
+
+			getChildren().add(main);
+
+			for (int i = 0; i < count; i++) {
+				getChildren().add(bind.anchor.get(i));
+			}
+
+		}
+
 		
+		public ArrayList<Anchor> getGroupList() {
+			return groupList;
+		}
+
+
+		class Bind {
+			public ArrayList<Anchor> anchor = null;
+			public ArrayList<SimpleDoubleProperty> property = null;
+			public ArrayList<NumberBinding> summa = null;
+
+			public Bind() {
+				this.anchor = new ArrayList<Anchor>();
+				this.property = new ArrayList<SimpleDoubleProperty>();
+				this.summa = new ArrayList<NumberBinding>();
+			}
+		}
 	}
 	
 	class LineIha extends Group {
@@ -299,7 +395,7 @@ public class ObjectsManipulation extends Application {
 		}
 	}
 
-	class Anchor extends Circle {
+	public class Anchor extends Circle {
 		private Anchor self = this;
 		Set<Anchor> linkAnchor = new HashSet<Anchor>();
 		private boolean selected = false;
