@@ -36,7 +36,9 @@ import javafx.scene.shape.StrokeType;
 import javafx.stage.Stage;
 
 public class ObjectsManipulation extends Application {
-
+    
+	private boolean controlDown = false;
+    
 	public static void main(String[] args) throws Exception {
 		launch(args);
 	}
@@ -132,62 +134,80 @@ public class ObjectsManipulation extends Application {
 		scene.setOnMousePressed(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent mouseEvent) {
-				scene.setCursor(Cursor.HAND);
-				
+				scene.setCursor(Cursor.DEFAULT);
+
 				if (mouseEvent.isPrimaryButtonDown()) {
-					
+
 					PickResult pickResult = mouseEvent.getPickResult();
 					Node point = pickResult.getIntersectedNode();
 
-					
-
-					if (point instanceof Circle) {
-						System.out.println("--------------Lines list this point---------");
-						
-						int count = 0;
-						
-						for (Anchor item : ((Anchor) point).linkAnchor) {
-							count++;
-							System.out.println("| " + count + ") " + item.getParent());
+					if (controlDown) {
+						if (point instanceof Circle) {
+							Anchor anchor = (Anchor) point;
+							
+							System.out.println("<<<< Create the new line >>>>");
+							
+							LineIha line = new LineIha((int) anchor.centerXProperty().get(), 
+			                                           (int) anchor.centerYProperty().get(),
+			                                           Color.GREEN);
+							
+							Utils.linkAnchor(line.start, anchor);
+							
+							line.end.getLinkAnchor().add(line.end);
+							
+							root.getChildren().add(line);
 						}
-						
-						System.out.println("------------------------------------------");
-					}
+					} else {
+						if (point instanceof Circle) {
+							System.out.println("--------------Lines list this point---------");
 
-					if (point instanceof BoundLine) {
-						System.out.println("---------------Linked list this line-----------------------------------");
+							int count = 0;
 
-						System.out.println("|   <This line:" + ((LineIha) point.getParent()) + ">");
-						System.out.println("|--------------Linked list this line----------------------------------");
-						
-						int count = 0;
-						
-						for (Anchor item : ((LineIha) point.getParent()).start.linkAnchor) {
-							if (item != ((LineIha) point.getParent()).start) {
+							for (Anchor item : ((Anchor) point).linkAnchor) {
 								count++;
 								System.out.println("| " + count + ") " + item.getParent());
 							}
+
+							System.out.println("------------------------------------------");
 						}
 
-						for (Anchor item : ((LineIha) point.getParent()).end.linkAnchor) {
-							if (item != ((LineIha) point.getParent()).end) {
-								System.out.println("| " + count + ") " + item.getParent());
-								count++;
+						if (point instanceof BoundLine) {
+							System.out
+									.println("---------------Linked list this line-----------------------------------");
+
+							System.out.println("|   <This line:" + ((LineIha) point.getParent()) + ">");
+							System.out
+									.println("|--------------Linked list this line-----------------------------------");
+
+							int count = 0;
+
+							for (Anchor item : ((LineIha) point.getParent()).start.linkAnchor) {
+								if (item != ((LineIha) point.getParent()).start) {
+									count++;
+									System.out.println("| " + count + ") " + item.getParent());
+								}
 							}
-						}
-						
-						System.out.println("-------------------------------------------------------------------");
-						
-					}
 
-					
+							count = (count == 0) ? 0 : count--;
+
+							for (Anchor item : ((LineIha) point.getParent()).end.linkAnchor) {
+								if (item != ((LineIha) point.getParent()).end) {
+									count++;
+									System.out.println("| " + count + ") " + item.getParent());
+								}
+							}
+
+							System.out.println("-------------------------------------------------------------------");
+
+						}
+					}
 				}
-				
+
 				if (mouseEvent.isSecondaryButtonDown()) {
-					
+
 					PickResult pickResult = mouseEvent.getPickResult();
 					Node point = pickResult.getIntersectedNode();
-					
+
 					if (point instanceof Circle) {
 						((Anchor) point).dispose();
 						root.getChildren().remove(point.getParent());
@@ -199,10 +219,24 @@ public class ObjectsManipulation extends Application {
 						root.getChildren().remove(point.getParent());
 					}
 				}
-				
+
 			}
 		});
-		
+		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+			@Override
+			public void handle(KeyEvent keyEvent) {
+				scene.setCursor(Cursor.CROSSHAIR);
+				controlDown = keyEvent.isControlDown();
+			}
+		});
+		scene.setOnKeyReleased(new EventHandler<KeyEvent>() {
+			@Override
+			public void handle(KeyEvent keyEvent) {
+				scene.setCursor(Cursor.DEFAULT);
+				controlDown = false;
+			}
+		});
+
 	}
 	
 	class AnchorList {
@@ -227,13 +261,26 @@ public class ObjectsManipulation extends Application {
 			this.endX = new SimpleDoubleProperty(endX);
 			this.endY = new SimpleDoubleProperty(endY);
 
-			this.start = new Anchor(color, this.startX, this.startY);
-			this.end = new Anchor(color, this.endX, this.endY);
+			this.start = new Anchor(color, this.startX, this.startY, false);
+			this.end = new Anchor(color, this.endX, this.endY, false);
 			this.line = new BoundLine(color, this.startX, this.startY, this.endX, this.endY);
 
 			getChildren().addAll(line, start, end);
 		}
 
+		public LineIha(int startX, int startY, Color color) {
+
+			this.startX = new SimpleDoubleProperty(startX);
+			this.startY = new SimpleDoubleProperty(startY);
+			this.endX = new SimpleDoubleProperty(startX);
+			this.endY = new SimpleDoubleProperty(startY);
+
+			this.start = new Anchor(color, this.startX, this.startY, false);
+			this.end = new Anchor(color, this.endX, this.endY, true);
+			this.line = new BoundLine(color, this.startX, this.startY, this.endX, this.endY);
+
+			getChildren().addAll(line, start, end);
+		}
 		
 		public Anchor getStart() {
 			return start;
@@ -261,9 +308,10 @@ public class ObjectsManipulation extends Application {
 	class Anchor extends Circle {
 		private Anchor self = this;
 		Set<Anchor> linkAnchor = new HashSet<Anchor>();
+		private boolean selected = false;
 		private String id;
 
-		public Anchor(Color color, DoubleProperty x, DoubleProperty y) {
+		public Anchor(Color color, DoubleProperty x, DoubleProperty y, boolean selected) {
 			super(x.get(), y.get(), 1);
 			id = UUID.randomUUID().toString();
 			setFill(color.deriveColor(1, 1, 1, 0.5));
@@ -273,8 +321,14 @@ public class ObjectsManipulation extends Application {
 
 			x.bind(centerXProperty());
 			y.bind(centerYProperty());
-
+			
+			this.selected = selected;
+			
 			enableDrag();
+		}
+		
+		public Set<Anchor> getLinkAnchor() {
+			return linkAnchor;
 		}
 
 		public void dispose(){
@@ -309,6 +363,14 @@ public class ObjectsManipulation extends Application {
 
 		}
 
+		public boolean isSelected() {
+			return selected;
+		}
+
+		public void setSelected(boolean selected) {
+			this.selected = selected;
+		}
+
 		public String getID(){
 			return id;
 		}
@@ -336,8 +398,16 @@ public class ObjectsManipulation extends Application {
 
 					PickResult pickResult = mouseEvent.getPickResult();
 					Node point = pickResult.getIntersectedNode();
-
-					if (point instanceof Circle) 
+					
+					if (isSelected()) {
+						if (point instanceof Circle) {
+							if (((Anchor) point) != self){
+								setSelected(false);
+							}
+						}
+					}
+					
+					if (point instanceof Circle && !selected) 
 						Utils.linkAnchor(self, point);
 
 					if (!self.centerXProperty().isBound()) self.setCenterX(newX);
