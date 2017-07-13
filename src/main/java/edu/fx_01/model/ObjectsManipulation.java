@@ -1,29 +1,20 @@
-package edu.fx_01;
+package edu.fx_01.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
-import com.sun.javafx.geom.PickRay;
-import com.sun.javafx.scene.input.PickResultChooser;
-
 import javafx.application.Application;
-
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
-import javafx.geometry.Bounds;
-import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -31,7 +22,6 @@ import javafx.scene.input.PickResult;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.Shape;
 import javafx.scene.shape.StrokeType;
 import javafx.stage.Stage;
 
@@ -243,6 +233,10 @@ public class ObjectsManipulation extends Application {
 		public ArrayList<Anchor> list = new ArrayList<Anchor>();
 	}
 
+	class BlockIha extends Group{
+		
+	}
+	
 	class LineIha extends Group {
 
 		private Line line;
@@ -409,7 +403,7 @@ public class ObjectsManipulation extends Application {
 					
 					if (point instanceof Circle && !selected) 
 						Utils.linkAnchor(self, point);
-
+						
 					if (!self.centerXProperty().isBound()) self.setCenterX(newX);
 					if (!self.centerYProperty().isBound()) self.setCenterY(newY);
 				}

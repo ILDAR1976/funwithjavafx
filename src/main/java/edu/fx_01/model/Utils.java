@@ -1,7 +1,8 @@
-package edu.fx_01;
+package edu.fx_01.model;
 
 import java.util.List;
-import edu.fx_01.ObjectsManipulation.Anchor;
+
+import edu.fx_01.model.ObjectsManipulation.Anchor;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
