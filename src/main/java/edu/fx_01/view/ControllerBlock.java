@@ -3,7 +3,7 @@ package edu.fx_01.view;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import edu.fx_01.model.ObjectsManipulation.Anchor;
+import edu.fx_01.ObjectsManipulation.Anchor;
 import javafx.beans.property.DoubleProperty;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;

@@ -2,8 +2,8 @@ package edu.fx_01.model;
 
 import java.util.List;
 
-import edu.fx_01.model.ObjectsManipulation.Anchor;
-import edu.fx_01.model.ObjectsManipulation.BlockIha;
+import edu.fx_01.ObjectsManipulation.Anchor;
+import edu.fx_01.ObjectsManipulation.BlockIha;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -34,8 +34,11 @@ public class Utils {
 		return node;
 	}
 
-	static void linkAnchor(Anchor self, Object point) {
+	public static void linkAnchor(Anchor self, Object point) {
 		Anchor jobPoint = (Anchor) point;
+		
+		int count = 0;
+		
 		if (jobPoint != self) {
 			
 			self.linkAnchor.add(jobPoint);
@@ -46,14 +49,22 @@ public class Utils {
 			for (Anchor item : self.linkAnchor) {
 				if (item != self){
 					item.linkAnchor.addAll(self.linkAnchor);
+					item.linkAnchor.add(self);
 				}
 				
 				if (item.getParent() instanceof BlockIha) { 
 					main = item;
+				} else {
+					
+					if (count == 0) main = item;
+					
+					count++;
 				}
 			}
 			
-			if (main != null && !(self.getParent() instanceof BlockIha)) {
+			if (main != null && !(self.getParent() instanceof BlockIha) && (main != self)) {
+				main.linkAnchor.addAll(self.linkAnchor);
+				main.linkAnchor.add(self);
 				
 				self.centerXProperty().bind(main.centerXProperty());
 				self.centerYProperty().bind(main.centerYProperty());

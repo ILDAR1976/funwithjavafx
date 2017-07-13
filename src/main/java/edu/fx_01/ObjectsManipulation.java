@@ -1,4 +1,4 @@
-package edu.fx_01.model;
+package edu.fx_01;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import edu.fx_01.model.Utils;
 import edu.fx_01.view.ControllerBlock;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
@@ -31,7 +33,7 @@ import javafx.stage.Stage;
 public class ObjectsManipulation extends Application {
     
 	private boolean controlDown = false;
-    
+	
 	public static void main(String[] args) throws Exception {
 		launch(args);
 	}
@@ -159,6 +161,7 @@ public class ObjectsManipulation extends Application {
 							
 							Utils.linkAnchor(line.start, anchor);
 							
+							line.start.getLinkAnchor().add(line.start);
 							line.end.getLinkAnchor().add(line.end);
 							
 							root.getChildren().add(line);
@@ -215,7 +218,15 @@ public class ObjectsManipulation extends Application {
 					Node point = pickResult.getIntersectedNode();
 
 					if (point instanceof Circle) {
-						((Anchor) point).dispose();
+						if (point.getParent() instanceof BlockIha){
+							((Anchor) point).dispose();
+						}
+						
+						if (point.getParent() instanceof LineIha){
+							((LineIha) point.getParent()).start.dispose();
+							((LineIha) point.getParent()).end.dispose();
+						}
+						
 						root.getChildren().remove(point.getParent());
 					}
 
@@ -375,7 +386,6 @@ public class ObjectsManipulation extends Application {
 		public Anchor getStart() {
 			return start;
 		}
-
 		
 		public Anchor getEnd() {
 			return end;
@@ -397,7 +407,7 @@ public class ObjectsManipulation extends Application {
 
 	public class Anchor extends Circle {
 		private Anchor self = this;
-		Set<Anchor> linkAnchor = new HashSet<Anchor>();
+		public Set<Anchor> linkAnchor = new HashSet<Anchor>();
 		private boolean selected = false;
 		private String id;
 
@@ -427,27 +437,32 @@ public class ObjectsManipulation extends Application {
 			this.linkAnchor.remove(this);
 			
 			Anchor main = null;
-				
-			int count = 0;
+			
+			for (Anchor item: this.linkAnchor){
+				if ( item.getParent() instanceof BlockIha ) {
+					main = item;
+					break;
+				} else {
+					main = item;
+					main.centerXProperty().unbind();
+					main.centerYProperty().unbind();
+				}
+			}
+			
+			if (main == null) return;
+					
+			main.linkAnchor.remove(this);
+			main.getParent().toFront();
+			this.linkAnchor.remove(main);
 			
 			for (Anchor item: this.linkAnchor) {
 				
-				if ( count == 0 ) {
-					main = item;
-					main.linkAnchor.remove(this);
-					main.centerXProperty().unbind();
-					main.centerYProperty().unbind();
-					main.getParent().toFront();
-				} else {
 					item.linkAnchor.remove(this);
 					item.centerXProperty().unbind();
 					item.centerYProperty().unbind();
 					item.centerXProperty().bind(main.centerXProperty());
 					item.centerYProperty().bind(main.centerYProperty());
 					item.getParent().toBack();
-				}
-				
-				count++;
 				
 			}
 
