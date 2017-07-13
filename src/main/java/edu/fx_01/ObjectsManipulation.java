@@ -139,15 +139,48 @@ public class ObjectsManipulation extends Application {
 					PickResult pickResult = mouseEvent.getPickResult();
 					Node point = pickResult.getIntersectedNode();
 
-					System.out.println("--------------Lines list this point---------");
+					
 
 					if (point instanceof Circle) {
+						System.out.println("--------------Lines list this point---------");
+						
+						int count = 0;
+						
 						for (Anchor item : ((Anchor) point).linkAnchor) {
-							System.out.println(item.getParent());
+							count++;
+							System.out.println("| " + count + ") " + item.getParent());
 						}
+						
+						System.out.println("------------------------------------------");
 					}
 
-					System.out.println("-------------------------------");
+					if (point instanceof BoundLine) {
+						System.out.println("---------------Linked list this line-----------------------------------");
+
+						System.out.println("|   <This line:" + ((LineIha) point.getParent()) + ">");
+						System.out.println("|--------------Linked list this line----------------------------------");
+						
+						int count = 0;
+						
+						for (Anchor item : ((LineIha) point.getParent()).start.linkAnchor) {
+							if (item != ((LineIha) point.getParent()).start) {
+								count++;
+								System.out.println("| " + count + ") " + item.getParent());
+							}
+						}
+
+						for (Anchor item : ((LineIha) point.getParent()).end.linkAnchor) {
+							if (item != ((LineIha) point.getParent()).end) {
+								System.out.println("| " + count + ") " + item.getParent());
+								count++;
+							}
+						}
+						
+						System.out.println("-------------------------------------------------------------------");
+						
+					}
+
+					
 				}
 				
 				if (mouseEvent.isSecondaryButtonDown()) {
@@ -160,8 +193,10 @@ public class ObjectsManipulation extends Application {
 						root.getChildren().remove(point.getParent());
 					}
 
-					if (point instanceof LineIha) {
-						
+					if (point instanceof BoundLine) {
+						((LineIha) point.getParent()).start.dispose();
+						((LineIha) point.getParent()).end.dispose();
+						root.getChildren().remove(point.getParent());
 					}
 				}
 				
