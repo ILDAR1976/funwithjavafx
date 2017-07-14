@@ -226,15 +226,28 @@ public class ObjectsManipulation extends Application {
 
 					if (point instanceof Circle) {
 						if (point.getParent() instanceof BlockIha) {
-							((Anchor) point).dispose();
+							for (Anchor item : ((BlockIha) point.getParent()).groupList) {
+								item.getLinkAnchor().remove(item);
+								for (Anchor item2 : item.getLinkAnchor()) {
+									if (item2.getParent() instanceof LineIha) {
+										((LineIha) item2.getParent()).getStart().dispose();
+										((LineIha) item2.getParent()).getEnd().dispose();
+										root.getChildren().remove(item2.getParent());
+									}
+								}
+								
+								item.dispose();
+								root.getChildren().remove(item.getParent());
+							}
 						}
 
 						if (point.getParent() instanceof LineIha) {
 							((LineIha) point.getParent()).start.dispose();
 							((LineIha) point.getParent()).end.dispose();
+							root.getChildren().remove(point.getParent());
 						}
 
-						root.getChildren().remove(point.getParent());
+						
 					}
 
 					if (point instanceof BoundLine) {
@@ -314,6 +327,8 @@ public class ObjectsManipulation extends Application {
 				bind.anchor.get(i).centerXProperty().bind(bind.summa.get((i * 2)));
 				bind.anchor.get(i).centerYProperty().bind(bind.summa.get((i * 2) + 1));
 
+				bind.anchor.get(i).setNotMoved(true);
+				
 				groupList.add(bind.anchor.get(i));
 
 			}
