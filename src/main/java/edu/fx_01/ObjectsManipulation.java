@@ -26,6 +26,8 @@ import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.PickResult;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
@@ -35,7 +37,11 @@ import javafx.stage.Stage;
 public class ObjectsManipulation extends Application {
 
 	private boolean controlDown = false;
-
+    private final int TYPE_PANE = 1;
+    private final int TYPE_CONTROLLER = 2;
+    private final int TYPE_BLOCK = 3;
+    private final int TYPE_LINE = 4;
+	
 	public static void main(String[] args) throws Exception {
 		launch(args);
 	}
@@ -144,25 +150,27 @@ public class ObjectsManipulation extends Application {
 
 					PickResult pickResult = mouseEvent.getPickResult();
 					Node point = pickResult.getIntersectedNode();
+					Utils.p("" + point.getParent());
 					if (point != null) {
-						// System.out.println(point.getClass().getSuperclass().getName());
 						if (point.getClass().getSuperclass().getName() == "javafx.scene.shape.Circle"
 								|| point.getClass().getSuperclass().getName() == "javafx.scene.shape.Line") {
 							if (controlDown) {
 								if (point instanceof Circle) {
-									Anchor anchor = (Anchor) point;
+									if (!((Anchor) point).selected) {
+										Anchor anchor = (Anchor) point;
 
-									System.out.println("<<<< Create the new line >>>>");
+										Utils.s();
+										Utils.p("<<<< Create the new line >>>>");
+										Utils.s();
 
-									LineIha line = new LineIha((int) anchor.centerXProperty().get(),
-											(int) anchor.centerYProperty().get(), Color.GREEN);
+										LineIha line = new LineIha((int) anchor.centerXProperty().get(),
+												(int) anchor.centerYProperty().get(), Color.GREEN);
 
-									Utils.linkAnchor(line.start, anchor);
+										Utils.linkAnchor(anchor, line.start);
+										
 
-									line.start.getLinkAnchor().add(line.start);
-									line.end.getLinkAnchor().add(line.end);
-
-									root.getChildren().add(line);
+										root.getChildren().add(line);
+									}
 								}
 							} else {
 								if (point instanceof Circle) {
@@ -223,22 +231,36 @@ public class ObjectsManipulation extends Application {
 
 					PickResult pickResult = mouseEvent.getPickResult();
 					Node point = pickResult.getIntersectedNode();
-
+					
+					int type = 0;
+					
+					if (point != null) {
+						if (point.getParent() instanceof Pane) type = TYPE_PANE;
+						if (point.getParent() instanceof ControllerBlock) type = TYPE_CONTROLLER;
+						if (point.getParent() instanceof BlockIha) type = TYPE_BLOCK;
+						if (point.getParent() instanceof LineIha) type = TYPE_LINE;
+					}
+					
+					if ((type >= TYPE_PANE) && (type <= TYPE_BLOCK)){
+						
+						BlockIha block = null;
+						
+						switch (type){
+							case TYPE_PANE:
+								block = (BlockIha) point.getParent().getParent().getParent();
+								break;
+							case TYPE_CONTROLLER:
+								block = (BlockIha) point.getParent().getParent();
+								break;
+						}
+						
+						deleteBlock(block, root);
+					}
+					
+					
 					if (point instanceof Circle) {
 						if (point.getParent() instanceof BlockIha) {
-							for (Anchor item : ((BlockIha) point.getParent()).groupList) {
-								item.getLinkAnchor().remove(item);
-								for (Anchor item2 : item.getLinkAnchor()) {
-									if (item2.getParent() instanceof LineIha) {
-										((LineIha) item2.getParent()).getStart().dispose();
-										((LineIha) item2.getParent()).getEnd().dispose();
-										root.getChildren().remove(item2.getParent());
-									}
-								}
-								
-								item.dispose();
-								root.getChildren().remove(item.getParent());
-							}
+							deleteBlock(((BlockIha) point.getParent()), root);
 						}
 
 						if (point.getParent() instanceof LineIha) {
@@ -246,8 +268,6 @@ public class ObjectsManipulation extends Application {
 							((LineIha) point.getParent()).end.dispose();
 							root.getChildren().remove(point.getParent());
 						}
-
-						
 					}
 
 					if (point instanceof BoundLine) {
@@ -276,6 +296,25 @@ public class ObjectsManipulation extends Application {
 
 	}
 
+	private void deleteBlock(BlockIha block, Group root){
+		for (Anchor item : block.groupList) {
+			item.getLinkAnchor().remove(item);
+			for (Anchor item2 : item.getLinkAnchor()) {
+				if (item2.getParent() instanceof LineIha) {
+					((LineIha) item2.getParent()).getStart().getLinkAnchor().remove(item2);
+					((LineIha) item2.getParent()).getStart().getLinkAnchor().remove(item);
+					((LineIha) item2.getParent()).getStart().dispose();
+					((LineIha) item2.getParent()).getEnd().getLinkAnchor().remove(item2);
+					((LineIha) item2.getParent()).getEnd().getLinkAnchor().remove(item);
+					((LineIha) item2.getParent()).getEnd().dispose();
+					root.getChildren().remove((LineIha)item2.getParent());
+				}
+			}
+
+			item.dispose();
+			root.getChildren().remove(item.getParent());
+		}		
+	}
 	public class AnchorList {
 		public ArrayList<Anchor> list = new ArrayList<Anchor>();
 	}
@@ -454,7 +493,7 @@ public class ObjectsManipulation extends Application {
 		public void dispose() {
 			this.centerXProperty().unbind();
 			this.centerYProperty().unbind();
-			this.linkAnchor.remove(this);
+			this.getLinkAnchor().remove(this);
 
 			Anchor main = null;
 
@@ -472,13 +511,13 @@ public class ObjectsManipulation extends Application {
 			if (main == null)
 				return;
 
-			main.linkAnchor.remove(this);
+			main.getLinkAnchor().remove(this);
 			main.getParent().toFront();
-			this.linkAnchor.remove(main);
+			this.getLinkAnchor().remove(main);
 
-			for (Anchor item : this.linkAnchor) {
+			for (Anchor item : this.getLinkAnchor()) {
 
-				item.linkAnchor.remove(this);
+				item.getLinkAnchor().remove(this);
 				item.centerXProperty().unbind();
 				item.centerYProperty().unbind();
 				item.centerXProperty().bind(main.centerXProperty());
@@ -543,7 +582,6 @@ public class ObjectsManipulation extends Application {
 
 					if (point instanceof Circle && !selected)
 						if (point.getClass().getSuperclass().getName() == "javafx.scene.shape.Circle") {
-							//System.out.println(point.getClass().getSuperclass().getName());
 							
 							if (point.getParent() instanceof BlockIha)
 								if (self.getParent() instanceof BlockIha) 
@@ -555,8 +593,6 @@ public class ObjectsManipulation extends Application {
 							
 							if (!isNotMoved() && ((Anchor)point) != self  ) {
 								Utils.linkAnchor(self, (Anchor) point);
-
-								
 							}
 						}
 

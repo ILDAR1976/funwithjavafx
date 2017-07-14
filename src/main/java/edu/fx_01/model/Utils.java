@@ -59,14 +59,9 @@ public class Utils {
 			slave.getParent().toBack();
 			master.getParent().toFront();
 			
-			p("master:",master,3);
-			p("slave:",slave,3);
-			
 			if (master.getLinkAnchor().size() <= 2){
-				p("A");
 				link(master, slave, LINK_DIRECT);
 			} else {
-				p("B");
 				link(master, slave, LINK_CIRCLE);
 			}
 		}
