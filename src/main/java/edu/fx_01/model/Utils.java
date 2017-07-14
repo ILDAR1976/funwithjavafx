@@ -1,14 +1,20 @@
 package edu.fx_01.model;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import edu.fx_01.ObjectsManipulation.Anchor;
+import edu.fx_01.ObjectsManipulation.AnchorList;
 import edu.fx_01.ObjectsManipulation.BlockIha;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 
 public class Utils {
+
+	private static final int LINK_DIRECT = 0;
+	private static final int LINK_CIRCLE = 1;
 
 	public static Node pick(Node node, double sceneX, double sceneY) {
 		Point2D p = node.sceneToLocal(sceneX, sceneY, true);
@@ -34,57 +40,141 @@ public class Utils {
 		return node;
 	}
 
-	public static void linkAnchor(Anchor self, Object point) {
-		Anchor jobPoint = (Anchor) point;
-		
-		int count = 0;
-		
-		if (jobPoint != self) {
-			
-			self.linkAnchor.add(jobPoint);
-			self.linkAnchor.addAll(jobPoint.linkAnchor);
+	public static void linkAnchor(Anchor self, Anchor job) {
 
-			Anchor main = null;
+		if (job != self) {
 			
-			for (Anchor item : self.linkAnchor) {
-				if (item != self){
-					item.linkAnchor.addAll(self.linkAnchor);
-					item.linkAnchor.add(self);
-				}
-				
-				if (item.getParent() instanceof BlockIha) { 
-					main = item;
-				} else {
-					
-					if (count == 0) main = item;
-					
-					count++;
-				}
+			Anchor master = (job.getParent() instanceof BlockIha) ? job : self;
+			Anchor slave = (job.getParent() instanceof BlockIha) ? self : job;
+			
+			if (self.getParent() instanceof BlockIha ||
+			    job.getParent() instanceof BlockIha ) {
+				master.setNotMoved(true);
+				slave.setNotMoved(true);
 			}
 			
-			if (main != null && !(self.getParent() instanceof BlockIha) && (main != self)) {
-				main.linkAnchor.addAll(self.linkAnchor);
-				main.linkAnchor.add(self);
-				
-				self.centerXProperty().bind(main.centerXProperty());
-				self.centerYProperty().bind(main.centerYProperty());
-				
-				self.getParent().toBack();
-				main.getParent().toFront();
-				
-			} else {
 
-				jobPoint.centerXProperty().bind(self.centerXProperty());
-				jobPoint.centerYProperty().bind(self.centerYProperty());
-
-				jobPoint.getParent().toBack();
-				self.getParent().toFront();
-
-				jobPoint.linkAnchor.addAll(self.linkAnchor);
-				jobPoint.linkAnchor.add(self);
+			master.getLinkAnchor().addAll(slave.getLinkAnchor());
 			
+			slave.getParent().toBack();
+			master.getParent().toFront();
+			
+			p("master:",master,3);
+			p("slave:",slave,3);
+			
+			if (master.getLinkAnchor().size() <= 2){
+				p("A");
+				link(master, slave, LINK_DIRECT);
+			} else {
+				p("B");
+				link(master, slave, LINK_CIRCLE);
 			}
 		}
 	}
 
+	private static void link(Anchor master, Anchor slave, int selector) {
+		switch (selector) {
+		case LINK_DIRECT:
+			
+			slave.getLinkAnchor().addAll(master.getLinkAnchor());
+
+			slave.centerXProperty().bind(master.centerXProperty());
+			slave.centerYProperty().bind(master.centerYProperty());
+			
+			break;
+		
+		case LINK_CIRCLE:
+			slave.centerXProperty().bind(master.centerXProperty());
+			slave.centerYProperty().bind(master.centerYProperty());
+			
+			for (Anchor item : master.getLinkAnchor()) {
+
+				if (item != master) {
+				
+					item.getLinkAnchor().addAll(master.getLinkAnchor());
+		
+					if (master.isNotMoved()) item.setNotMoved(true);
+					
+					item.getParent().toBack();
+				}
+			}
+			
+			break;
+		}
+	}
+	
+	public static void p(String msg) {
+		System.out.println(msg);
+	}
+
+	public static void p(Anchor anr) {
+		System.out.println("--------------" + anr.getID() + "--------------");
+		for (Anchor item : anr.getLinkAnchor()) {
+			System.out.println("| " + item.getParent());
+		}
+		System.out.println("-------------- End anchor list--------------");
+	}
+
+	public static void p(String mark, Anchor anr, int selector) {
+
+		System.out.println("--------------" + mark + " " + anr.getID() + "--------------");
+		switch (selector) {
+		case 0:
+			for (Anchor item : anr.getLinkAnchor()) {
+				System.out.println("| " + item.getID().substring(33) + " - " + item.getParent().toString().substring(20));
+			}
+			break;
+		case 1:
+			System.out.println("| " + anr.getID().substring(33));
+			break;
+		case 2:
+			System.out.println("| " + anr.getID().substring(33) + " - " + anr.getParent().toString().substring(20));
+			break;
+		case 3:
+			System.out.println("| " + anr.getID().substring(33) + " - " + anr.getParent().toString().substring(20) 
+					                + " NotMoved: " + anr.isNotMoved());
+			break;
+		}
+		System.out.println("-------------- End anchor list--------------");
+	}
+
+	public static void p(Set<Anchor> anr) {
+		System.out.println("-------------- Anchor list --------------");
+		for (Anchor item : anr) {
+			System.out.println("| " + item.getParent());
+		}
+		System.out.println("-------------- End anchor list--------------");
+	}
+
+	public static void p(String msg, Set<Anchor> anr, int selector) {
+		System.out.println("--------------" + msg + " Anchor list --------------");
+		for (Anchor item : anr) {
+			switch (selector) {
+			case 0:
+				System.out.println("| " + item.getParent().toString().substring(20));
+				break;
+			case 1:
+				System.out.println("| " + item.getID());
+
+			case 2:
+				System.out.println("| " + item.getID() + " - " + item.getParent().toString().substring(20));
+
+			case 3:
+				System.out
+						.println("| " + item.getID().substring(33) + " - " + item.getParent().toString().substring(20));
+			}
+		}
+		System.out.println("-------------- End anchor list--------------");
+	}
+
+	public static void p(boolean parent, Anchor anr) {
+		if (parent)
+			System.out.println("---Anchor: " + anr.getID() + "--------");
+		else
+			System.out.println("---Anchor: " + anr.getParent() + "--------");
+	}
+
+	public static void s() {
+		System.out.println();
+	}
 }

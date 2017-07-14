@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import edu.fx_01.ObjectsManipulation.BlockIha;
+import edu.fx_01.ObjectsManipulation.LineIha;
 import edu.fx_01.model.Utils;
 import edu.fx_01.view.ControllerBlock;
 import javafx.application.Application;
@@ -31,9 +33,9 @@ import javafx.scene.shape.StrokeType;
 import javafx.stage.Stage;
 
 public class ObjectsManipulation extends Application {
-    
+
 	private boolean controlDown = false;
-	
+
 	public static void main(String[] args) throws Exception {
 		launch(args);
 	}
@@ -45,22 +47,17 @@ public class ObjectsManipulation extends Application {
 
 		Group root = new Group();
 
-		root.getChildren().addAll(
-				new BlockIha(50,400),
-				new LineIha(10, 10, 590, 10, Color.RED), 
-				new LineIha(10, 35, 590, 35, Color.BLUE),
-				new LineIha(10, 60, 590, 60, Color.GREEN), 
-				new LineIha(70, 250, 300, 400, Color.RED),
-				new LineIha(300, 400, 530, 250, Color.CHOCOLATE), 
-				new LineIha(150, 420, 450, 120, Color.BROWN),
-				new LineIha(150, 120, 450, 420, Color.BLACK));
-		
+		root.getChildren().addAll(new BlockIha(50, 100), new LineIha(10, 10, 590, 10, Color.RED),
+				new LineIha(10, 35, 590, 35, Color.BLUE), new LineIha(10, 60, 590, 60, Color.GREEN),
+				new BlockIha(50, 400), new BlockIha(450, 100), new BlockIha(450, 400),
+				new LineIha(70, 250, 300, 400, Color.RED), new LineIha(300, 400, 530, 250, Color.CHOCOLATE),
+				new LineIha(150, 420, 450, 120, Color.BROWN), new LineIha(150, 120, 450, 420, Color.BLACK));
 		/*
-		root.getChildren().addAll(
-				new BlockIha(50,400),
-				new LineIha(150, 420, 450, 120, Color.BROWN));
-		*/
-		
+		 * root.getChildren().addAll( new LineIha(70,250,300,400,Color.RED), new
+		 * LineIha(300,400,530,250,Color.CHOCOLATE), new
+		 * LineIha(300,400,330,250,Color.GREEN) );
+		 */
+
 		Scene scene = new Scene(root, 600, 600, Color.ALICEBLUE);
 
 		scene.widthProperty().addListener(new ChangeListener<Number>() {
@@ -81,7 +78,7 @@ public class ObjectsManipulation extends Application {
 		scene.getStylesheets().add(getClass().getResource("/application.css").toExternalForm());
 
 		enableDrag(scene, root);
-		
+
 		stage.setScene(scene);
 
 		stage.show();
@@ -89,7 +86,7 @@ public class ObjectsManipulation extends Application {
 		makeLinks(root);
 	}
 
-	private void makeLinks(Group root){
+	private void makeLinks(Group root) {
 		ArrayList<Anchor> anchorList = new ArrayList<Anchor>();
 
 		for (Node item : root.getChildren()) {
@@ -122,23 +119,22 @@ public class ObjectsManipulation extends Application {
 		}
 
 		for (Map.Entry<String, AnchorList> item : points.entrySet()) {
+
 			if (item.getValue().list.size() > 1) {
 				ArrayList<Anchor> jobAnchor = item.getValue().list;
 				Anchor main = jobAnchor.get(0);
 				jobAnchor.remove(0);
-
 				for (Anchor anchor : jobAnchor) {
 					Utils.linkAnchor(main, anchor);
 				}
 			} else {
 				ArrayList<Anchor> jobAnchor = item.getValue().list;
-				jobAnchor.get(0).linkAnchor.add(jobAnchor.get(0));
 			}
 		}
-		
+
 	}
-	
-	private void enableDrag(Scene scene, Group root){
+
+	private void enableDrag(Scene scene, Group root) {
 		scene.setOnMousePressed(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent mouseEvent) {
@@ -148,66 +144,77 @@ public class ObjectsManipulation extends Application {
 
 					PickResult pickResult = mouseEvent.getPickResult();
 					Node point = pickResult.getIntersectedNode();
+					if (point != null) {
+						// System.out.println(point.getClass().getSuperclass().getName());
+						if (point.getClass().getSuperclass().getName() == "javafx.scene.shape.Circle"
+								|| point.getClass().getSuperclass().getName() == "javafx.scene.shape.Line") {
+							if (controlDown) {
+								if (point instanceof Circle) {
+									Anchor anchor = (Anchor) point;
 
-					if (controlDown) {
-						if (point instanceof Circle) {
-							Anchor anchor = (Anchor) point;
-							
-							System.out.println("<<<< Create the new line >>>>");
-							
-							LineIha line = new LineIha((int) anchor.centerXProperty().get(), 
-			                                           (int) anchor.centerYProperty().get(),
-			                                           Color.GREEN);
-							
-							Utils.linkAnchor(line.start, anchor);
-							
-							line.start.getLinkAnchor().add(line.start);
-							line.end.getLinkAnchor().add(line.end);
-							
-							root.getChildren().add(line);
-						}
-					} else {
-						if (point instanceof Circle) {
-							System.out.println("--------------Lines list this point---------");
+									System.out.println("<<<< Create the new line >>>>");
 
-							int count = 0;
+									LineIha line = new LineIha((int) anchor.centerXProperty().get(),
+											(int) anchor.centerYProperty().get(), Color.GREEN);
 
-							for (Anchor item : ((Anchor) point).linkAnchor) {
-								count++;
-								System.out.println("| " + count + ") " + item.getParent());
-							}
+									Utils.linkAnchor(line.start, anchor);
 
-							System.out.println("------------------------------------------");
-						}
+									line.start.getLinkAnchor().add(line.start);
+									line.end.getLinkAnchor().add(line.end);
 
-						if (point instanceof BoundLine) {
-							System.out
-									.println("---------------Linked list this line-----------------------------------");
+									root.getChildren().add(line);
+								}
+							} else {
+								if (point instanceof Circle) {
+									System.out.println("--------------Lines list this point---------");
 
-							System.out.println("|   <This line:" + ((LineIha) point.getParent()) + ">");
-							System.out
-									.println("|--------------Linked list this line-----------------------------------");
+									int count = 0;
 
-							int count = 0;
+									for (Anchor item : ((Anchor) point).linkAnchor) {
+										count++;
+										System.out.println("| " + count 
+																+ ") "
+																+ item.getID().substring(33) 
+												                + " - " 
+												                + item.getParent().toString().substring(20) 
+								                                + " NotMoved: " 
+												                + item.isNotMoved());
+									}
 
-							for (Anchor item : ((LineIha) point.getParent()).start.linkAnchor) {
-								if (item != ((LineIha) point.getParent()).start) {
-									count++;
-									System.out.println("| " + count + ") " + item.getParent());
+									System.out.println("------------------------------------------");
+								}
+
+								if (point instanceof BoundLine) {
+									System.out.println(
+											"---------------Linked list this line-----------------------------------");
+
+									System.out.println("|   <This line:" + ((LineIha) point.getParent()) + ">");
+									System.out.println(
+											"|--------------Linked list this line-----------------------------------");
+
+									int count = 0;
+
+									for (Anchor item : ((LineIha) point.getParent()).start.linkAnchor) {
+										if (item != ((LineIha) point.getParent()).start) {
+											count++;
+											System.out.println("| " + count + ") " + item.getParent());
+										}
+									}
+
+									count = (count == 0) ? 0 : count--;
+
+									for (Anchor item : ((LineIha) point.getParent()).end.linkAnchor) {
+										if (item != ((LineIha) point.getParent()).end) {
+											count++;
+											System.out.println("| " + count + ") " + item.getParent());
+										}
+									}
+
+									System.out.println(
+											"-------------------------------------------------------------------");
+
 								}
 							}
-
-							count = (count == 0) ? 0 : count--;
-
-							for (Anchor item : ((LineIha) point.getParent()).end.linkAnchor) {
-								if (item != ((LineIha) point.getParent()).end) {
-									count++;
-									System.out.println("| " + count + ") " + item.getParent());
-								}
-							}
-
-							System.out.println("-------------------------------------------------------------------");
-
 						}
 					}
 				}
@@ -218,15 +225,15 @@ public class ObjectsManipulation extends Application {
 					Node point = pickResult.getIntersectedNode();
 
 					if (point instanceof Circle) {
-						if (point.getParent() instanceof BlockIha){
+						if (point.getParent() instanceof BlockIha) {
 							((Anchor) point).dispose();
 						}
-						
-						if (point.getParent() instanceof LineIha){
+
+						if (point.getParent() instanceof LineIha) {
 							((LineIha) point.getParent()).start.dispose();
 							((LineIha) point.getParent()).end.dispose();
 						}
-						
+
 						root.getChildren().remove(point.getParent());
 					}
 
@@ -255,12 +262,12 @@ public class ObjectsManipulation extends Application {
 		});
 
 	}
-	
-	class AnchorList {
+
+	public class AnchorList {
 		public ArrayList<Anchor> list = new ArrayList<Anchor>();
 	}
 
-	public class BlockIha extends Group{
+	public class BlockIha extends Group {
 		DoubleProperty startX;
 		DoubleProperty startY;
 		ControllerBlock main;
@@ -284,10 +291,8 @@ public class ObjectsManipulation extends Application {
 
 			for (int i = 0; i < count; i++) {
 
-				bind.anchor.add(new Anchor( Color.GRAY, 
-											new SimpleDoubleProperty(startX - i - 1),
-											new SimpleDoubleProperty(startY + i + 1),
-											false ));
+				bind.anchor.add(new Anchor(Color.GRAY, new SimpleDoubleProperty(startX - i - 1),
+						new SimpleDoubleProperty(startY + i + 1), false));
 
 				if (i < 7) {
 					bind.property.add(new SimpleDoubleProperty(0));
@@ -311,8 +316,6 @@ public class ObjectsManipulation extends Application {
 
 				groupList.add(bind.anchor.get(i));
 
-				bind.anchor.get(i).getLinkAnchor().add(bind.anchor.get(i));
-				
 			}
 
 			this.main.setGroup(groupList);
@@ -325,11 +328,9 @@ public class ObjectsManipulation extends Application {
 
 		}
 
-		
 		public ArrayList<Anchor> getGroupList() {
 			return groupList;
 		}
-
 
 		class Bind {
 			public ArrayList<Anchor> anchor = null;
@@ -343,7 +344,7 @@ public class ObjectsManipulation extends Application {
 			}
 		}
 	}
-	
+
 	class LineIha extends Group {
 
 		private Line line;
@@ -382,11 +383,11 @@ public class ObjectsManipulation extends Application {
 
 			getChildren().addAll(line, start, end);
 		}
-		
+
 		public Anchor getStart() {
 			return start;
 		}
-		
+
 		public Anchor getEnd() {
 			return end;
 		}
@@ -407,9 +408,11 @@ public class ObjectsManipulation extends Application {
 
 	public class Anchor extends Circle {
 		private Anchor self = this;
-		public Set<Anchor> linkAnchor = new HashSet<Anchor>();
+		private Set<Anchor> linkAnchor = new HashSet<Anchor>();
 		private boolean selected = false;
 		private String id;
+		private boolean notMoved = false;
+		
 
 		public Anchor(Color color, DoubleProperty x, DoubleProperty y, boolean selected) {
 			super(x.get(), y.get(), 1);
@@ -421,25 +424,27 @@ public class ObjectsManipulation extends Application {
 
 			x.bind(centerXProperty());
 			y.bind(centerYProperty());
-			
+
 			this.selected = selected;
-			
+
 			enableDrag();
+			
+			linkAnchor.add(self);
 		}
-		
+
 		public Set<Anchor> getLinkAnchor() {
 			return linkAnchor;
 		}
 
-		public void dispose(){
+		public void dispose() {
 			this.centerXProperty().unbind();
 			this.centerYProperty().unbind();
 			this.linkAnchor.remove(this);
-			
+
 			Anchor main = null;
-			
-			for (Anchor item: this.linkAnchor){
-				if ( item.getParent() instanceof BlockIha ) {
+
+			for (Anchor item : this.linkAnchor) {
+				if (item.getParent() instanceof BlockIha) {
 					main = item;
 					break;
 				} else {
@@ -448,24 +453,33 @@ public class ObjectsManipulation extends Application {
 					main.centerYProperty().unbind();
 				}
 			}
-			
-			if (main == null) return;
-					
+
+			if (main == null)
+				return;
+
 			main.linkAnchor.remove(this);
 			main.getParent().toFront();
 			this.linkAnchor.remove(main);
-			
-			for (Anchor item: this.linkAnchor) {
-				
-					item.linkAnchor.remove(this);
-					item.centerXProperty().unbind();
-					item.centerYProperty().unbind();
-					item.centerXProperty().bind(main.centerXProperty());
-					item.centerYProperty().bind(main.centerYProperty());
-					item.getParent().toBack();
-				
+
+			for (Anchor item : this.linkAnchor) {
+
+				item.linkAnchor.remove(this);
+				item.centerXProperty().unbind();
+				item.centerYProperty().unbind();
+				item.centerXProperty().bind(main.centerXProperty());
+				item.centerYProperty().bind(main.centerYProperty());
+				item.getParent().toBack();
+
 			}
 
+		}
+		
+		public boolean isNotMoved() {
+			return notMoved;
+		}
+
+		public void setNotMoved(boolean notMoved) {
+			this.notMoved = notMoved;
 		}
 
 		public boolean isSelected() {
@@ -476,7 +490,7 @@ public class ObjectsManipulation extends Application {
 			this.selected = selected;
 		}
 
-		public String getID(){
+		public String getID() {
 			return id;
 		}
 
@@ -503,20 +517,38 @@ public class ObjectsManipulation extends Application {
 
 					PickResult pickResult = mouseEvent.getPickResult();
 					Node point = pickResult.getIntersectedNode();
-					
+
 					if (isSelected()) {
 						if (point instanceof Circle) {
-							if (((Anchor) point) != self){
+							if (((Anchor) point) != self) {
 								setSelected(false);
 							}
 						}
 					}
-					
-					if (point instanceof Circle && !selected) 
-						Utils.linkAnchor(self, point);
-						
-					if (!self.centerXProperty().isBound()) self.setCenterX(newX);
-					if (!self.centerYProperty().isBound()) self.setCenterY(newY);
+
+					if (point instanceof Circle && !selected)
+						if (point.getClass().getSuperclass().getName() == "javafx.scene.shape.Circle") {
+							//System.out.println(point.getClass().getSuperclass().getName());
+							
+							if (point.getParent() instanceof BlockIha)
+								if (self.getParent() instanceof BlockIha) 
+									if (point != self) setNotMoved(true);
+							
+							if (self.getParent() instanceof BlockIha)
+								if (point.getParent() instanceof BlockIha) 
+									if (point != self) setNotMoved(true);
+							
+							if (!isNotMoved() && ((Anchor)point) != self  ) {
+								Utils.linkAnchor(self, (Anchor) point);
+
+								
+							}
+						}
+
+					if (!self.centerXProperty().isBound())
+						self.setCenterX(newX);
+					if (!self.centerYProperty().isBound())
+						self.setCenterY(newY);
 				}
 
 			});
