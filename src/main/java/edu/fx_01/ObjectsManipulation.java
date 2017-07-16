@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.junit.Test;
+
 import edu.fx_01.ObjectsManipulation.BlockIha;
 import edu.fx_01.ObjectsManipulation.LineIha;
 import edu.fx_01.model.Utils;
@@ -150,7 +152,7 @@ public class ObjectsManipulation extends Application {
 
 					PickResult pickResult = mouseEvent.getPickResult();
 					Node point = pickResult.getIntersectedNode();
-					Utils.p("" + point.getParent());
+					
 					if (point != null) {
 						if (point.getClass().getSuperclass().getName() == "javafx.scene.shape.Circle"
 								|| point.getClass().getSuperclass().getName() == "javafx.scene.shape.Line") {
@@ -252,6 +254,9 @@ public class ObjectsManipulation extends Application {
 							case TYPE_CONTROLLER:
 								block = (BlockIha) point.getParent().getParent();
 								break;
+							case TYPE_BLOCK:
+								block = (BlockIha) point.getParent();
+								break;	
 						}
 						
 						deleteBlock(block, root);
@@ -315,6 +320,7 @@ public class ObjectsManipulation extends Application {
 			root.getChildren().remove(item.getParent());
 		}		
 	}
+	
 	public class AnchorList {
 		public ArrayList<Anchor> list = new ArrayList<Anchor>();
 	}
@@ -620,5 +626,23 @@ public class ObjectsManipulation extends Application {
 				}
 			});
 		}
+	}
+
+	//For tests
+	
+	public LineIha testLineIha(int startX, int startY, int endX, int endY, Color color){
+		return new LineIha(startX, startY, endX, endY, color);
+	}
+	
+	public BlockIha testBlockIha(int startX, int startY){
+		return new BlockIha(startX, startY);
+	}
+	
+	public void testEnableDrag(Scene scene, Group root){
+		enableDrag(scene, root);
+	}
+
+	public void testMakeLinks(Group root){
+		makeLinks(root);
 	}
 }
