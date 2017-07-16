@@ -24,6 +24,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -86,15 +87,51 @@ public class AppTest extends ApplicationTest {
 	}
 	
 	@Test
-	public void infoByPoint() {
+	public void testMainMechanism() {
 		Anchor testAnchor = ((LineIha)root.getChildren().get(2)).getEnd();
 		
 		String str = testAnchor.getID().substring(33) + " - " + testAnchor.getParent().toString().substring(20);
+
+		int count = 0;
+		
+		for (Node item : root.getChildren()) {
+			Utils.p("" + count + ") " + item);
+			count++;
+		}
+
+		drag(((LineIha)root.getChildren().get(3)).getStart(), MouseButton.PRIMARY);
+		drag(((LineIha)root.getChildren().get(4)).getStart(), MouseButton.PRIMARY);
+
+		drag(391, 400, MouseButton.PRIMARY);
+
+		drag(((LineIha)root.getChildren().get(4)).getStart(), MouseButton.PRIMARY);
+		
+		count = 0;
+		
+		for (Node item : root.getChildren()) {
+			Utils.p("" + count + ") " + item);
+			count++;
+		}
+		
+		drag(400, 400, MouseButton.PRIMARY);
+
+		
+		for (Anchor item : ((BlockIha)root.getChildren().get(6)).getGroupList()) {
+			clickOn(item);
+		}
+		
+		rightClickOn(((BlockIha)root.getChildren().get(6)).getGroupList().get(0));
+		
+		for (Anchor item : ((BlockIha)root.getChildren().get(7)).getGroupList()) {
+			clickOn(item);
+		}
 		
 		rightClickOn(((BlockIha)root.getChildren().get(7)).getGroupList().get(0));
+		
+		
 		clickOn(((LineIha)root.getChildren().get(0)).getStart());
 		clickOn(((LineIha)root.getChildren().get(1)).getEnd());
-		clickOn(((LineIha)root.getChildren().get(2)).getEnd());
+		clickOn(((LineIha)root.getChildren().get(0)).getEnd());
 		rightClickOn(((LineIha)root.getChildren().get(0)));
 		
 		assertContains(str);
