@@ -136,6 +136,32 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>com.akathist.maven.plugins.launch4j</groupId>
+				<artifactId>launch4j-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>l4j-clui</id>
+						<phase>package</phase>
+						<goals>
+							<goal>launch4j</goal>
+						</goals>
+						<configuration>
+							<headerType>console</headerType>
+							<outfile>target/fx.exe</outfile>
+							<jar>target/${project.name}-0.0.1-SNAPSHOT.jar</jar>
+							<classPath>
+								<mainClass>edu.fx_01.${mainclassname}</mainClass>
+								<addDependencies>true</addDependencies>
+								<preCp>anything</preCp>
+							</classPath>
+							<jre>
+								<minVersion>${java.version}</minVersion>
+							</jre>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 </project>

@@ -120,7 +120,7 @@ public class AppTest extends ApplicationTest {
 			clickOn(item);
 		}
 		
-		rightClickOn(((BlockIha)root.getChildren().get(6)).getGroupList().get(0));
+		rightClickOn(((BlockIha)root.getChildren().get(6)).getGroupList().get(2));
 		
 		for (Anchor item : ((BlockIha)root.getChildren().get(7)).getGroupList()) {
 			clickOn(item);
